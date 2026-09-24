@@ -1,0 +1,6 @@
+{
+  "name": "Cleankr Partner",
+  "description": "Professional home-service partner app for Cleankr featuring job dispatch, KYC onboarding, masked calling, earnings payouts, and enterprise security.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
