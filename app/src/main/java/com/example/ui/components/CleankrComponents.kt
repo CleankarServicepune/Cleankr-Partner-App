@@ -2,6 +2,7 @@ package com.example.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,19 +20,31 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material.icons.filled.Work
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
+import androidx.compose.material.icons.outlined.Article
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.TrackChanges
 import androidx.compose.material.icons.outlined.WorkOutline
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
@@ -165,141 +178,158 @@ fun CleankrMonogram(
 /**
  * Top App Bar with Logo, Online/Offline switch, Security status, and Notifications
  */
+/**
+ * High-fidelity Top Bar matching Urban Company Partner structure:
+ * Left: Hamburger Menu (☰) or Back button
+ * Right: Coins pill (77 ⟐), Notifications bell (🔔 5), Emergency button (🚨)
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CleankrTopBar(
-  isOnline: Boolean,
-  securityScore: Int,
-  unreadCount: Int,
-  onToggleDuty: () -> Unit,
-  onOpenSecurity: () -> Unit,
-  onOpenNotifications: () -> Unit,
+  coins: Int = 77,
+  unreadCount: Int = 5,
+  title: String? = null,
+  onOpenDrawer: () -> Unit = {},
+  onEmergencyClick: () -> Unit = {},
+  onOpenNotifications: () -> Unit = {},
   canNavigateBack: Boolean = false,
   onBackClick: () -> Unit = {}
 ) {
-  val dutyColor by animateColorAsState(
-    targetValue = if (isOnline) CleankrGreen else Color.Gray,
-    label = "dutyColor"
-  )
-
   TopAppBar(
     colors = TopAppBarDefaults.topAppBarColors(
       containerColor = MaterialTheme.colorScheme.surface,
       titleContentColor = MaterialTheme.colorScheme.onSurface
     ),
-    title = {
-      Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-      ) {
-        CleankrMonogram(sizeDp = 36.dp)
-        Column {
-          Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-              text = "CLEANKR",
-              fontWeight = FontWeight.Black,
-              letterSpacing = 1.2.sp,
-              fontSize = 17.sp,
-              color = CleankrCoral
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Surface(
-              shape = RoundedCornerShape(4.dp),
-              color = CleankrMagenta.copy(alpha = 0.2f)
-            ) {
-              Text(
-                text = "PARTNER",
-                fontWeight = FontWeight.Bold,
-                fontSize = 10.sp,
-                color = CleankrMagenta,
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
-              )
-            }
-          }
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Box(
-              modifier = Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(dutyColor)
-            )
-            Text(
-              text = if (isOnline) "ONLINE • Accepting Jobs" else "OFFLINE • On Break",
-              fontSize = 11.sp,
-              color = dutyColor,
-              fontWeight = FontWeight.Medium
-            )
-          }
-        }
-      }
-    },
     navigationIcon = {
       if (canNavigateBack) {
         IconButton(
           onClick = onBackClick,
           modifier = Modifier.testTag("top_bar_back_button")
         ) {
-          Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+          Icon(
+            imageVector = Icons.Default.ArrowBack,
+            contentDescription = "Back",
+            tint = MaterialTheme.colorScheme.onSurface
+          )
+        }
+      } else {
+        IconButton(
+          onClick = onOpenDrawer,
+          modifier = Modifier.testTag("top_bar_menu_button")
+        ) {
+          Icon(
+            imageVector = Icons.Default.Menu,
+            contentDescription = "Open Drawer Menu",
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(26.dp)
+          )
+        }
+      }
+    },
+    title = {
+      if (canNavigateBack && title != null) {
+        Text(
+          text = title,
+          fontSize = 18.sp,
+          fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onSurface
+        )
+      } else {
+        Row(
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+          CleankrMonogram(sizeDp = 28.dp)
+          Text(
+            text = "CLEANKR",
+            fontWeight = FontWeight.Black,
+            fontSize = 15.sp,
+            color = Color(0xFF1E1A22),
+            letterSpacing = 1.sp
+          )
         }
       }
     },
     actions = {
-      // Online/Offline Switch
-      Switch(
-        checked = isOnline,
-        onCheckedChange = { onToggleDuty() },
-        modifier = Modifier.testTag("duty_toggle_switch"),
-        colors = SwitchDefaults.colors(
-          checkedThumbColor = Color.White,
-          checkedTrackColor = CleankrGreen,
-          uncheckedThumbColor = Color.LightGray,
-          uncheckedTrackColor = Color.DarkGray
-        )
-      )
-
-      // Security Shield Icon with Score Badge
-      IconButton(
-        onClick = onOpenSecurity,
-        modifier = Modifier.testTag("security_center_button")
+      // 1. Coins Pill Badge (e.g. 77 ⟐)
+      Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surface,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)),
+        modifier = Modifier.padding(end = 6.dp)
       ) {
-        BadgedBox(
-          badge = {
-            Badge(
-              containerColor = if (securityScore >= 90) CleankrGreen else CleankrAmber
-            ) {
-              Text(text = "$securityScore", fontSize = 9.sp)
-            }
-          }
+        Row(
+          modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(3.dp)
         ) {
-          Icon(
-            imageVector = Icons.Default.Security,
-            contentDescription = "Security Shield",
-            tint = CleankrCyan
+          Text(
+            text = "$coins",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
+          )
+          Text(
+            text = "⟐",
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold,
+            color = CleankrViolet
           )
         }
       }
 
-      // Notification Bell
+      // 2. Notification Bell with Badge
       IconButton(
         onClick = onOpenNotifications,
-        modifier = Modifier.testTag("notifications_button")
+        modifier = Modifier.size(38.dp).testTag("notifications_button")
       ) {
         BadgedBox(
           badge = {
             if (unreadCount > 0) {
-              Badge(containerColor = CleankrCoral) {
-                Text(text = "$unreadCount", fontSize = 9.sp)
+              Badge(
+                containerColor = CleankrRed,
+                contentColor = Color.White
+              ) {
+                Text(text = "$unreadCount", fontSize = 9.sp, fontWeight = FontWeight.Bold)
               }
             }
           }
         ) {
           Icon(
-            imageVector = Icons.Default.Notifications,
+            imageVector = Icons.Outlined.Notifications,
             contentDescription = "Notifications",
-            tint = MaterialTheme.colorScheme.onSurface
+            tint = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.size(24.dp)
+          )
+        }
+      }
+
+      // 3. Emergency SOS Pill Button
+      Surface(
+        shape = RoundedCornerShape(18.dp),
+        color = CleankrRed.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, CleankrRed.copy(alpha = 0.45f)),
+        modifier = Modifier
+          .padding(start = 2.dp, end = 8.dp)
+          .clickable(onClick = onEmergencyClick)
+          .testTag("emergency_button")
+      ) {
+        Row(
+          modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+          verticalAlignment = Alignment.CenterVertically,
+          horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+          Text(
+            text = "Emergency",
+            color = CleankrRed,
+            fontSize = 11.sp,
+            fontWeight = FontWeight.Bold
+          )
+          Icon(
+            imageVector = Icons.Default.NotificationsActive,
+            contentDescription = null,
+            tint = CleankrRed,
+            modifier = Modifier.size(13.dp)
           )
         }
       }
@@ -342,101 +372,171 @@ fun StatusBadge(
 }
 
 /**
- * Bottom Navigation Bar
+ * Bottom Navigation Bar with 5 tabs matching Urban Company Partner:
+ * 1. Home
+ * 2. New
+ * 3. Ongoing
+ * 4. Target
+ * 5. Money
  */
 @Composable
 fun CleankrBottomNav(
   currentScreen: AppScreen,
+  ongoingBadgeCount: Int = 0,
   onScreenSelected: (AppScreen) -> Unit
 ) {
   NavigationBar(
     containerColor = MaterialTheme.colorScheme.surface,
-    tonalElevation = 6.dp,
+    tonalElevation = 4.dp,
     modifier = Modifier.testTag("cleankr_bottom_nav")
   ) {
+    // 1. Home Tab
     NavigationBarItem(
       selected = currentScreen == AppScreen.DASHBOARD,
       onClick = { onScreenSelected(AppScreen.DASHBOARD) },
       icon = {
         Icon(
           if (currentScreen == AppScreen.DASHBOARD) Icons.Filled.Home else Icons.Outlined.Home,
-          contentDescription = "Dashboard"
+          contentDescription = "Home"
         )
       },
-      label = { Text("Dashboard", fontSize = 11.sp) },
+      label = { Text("Home", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.DASHBOARD) FontWeight.Bold else FontWeight.Normal) },
       colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = CleankrCoral,
-        selectedTextColor = CleankrCoral,
-        indicatorColor = CleankrCoral.copy(alpha = 0.15f)
+        selectedIconColor = Color(0xFF1E1A22),
+        selectedTextColor = Color(0xFF1E1A22),
+        unselectedIconColor = Color(0xFF757575),
+        unselectedTextColor = Color(0xFF757575),
+        indicatorColor = Color(0xFFF0EDF5)
       )
     )
 
+    // 2. New Tab
     NavigationBarItem(
-      selected = currentScreen == AppScreen.CALENDAR,
-      onClick = { onScreenSelected(AppScreen.CALENDAR) },
+      selected = currentScreen == AppScreen.NEW_JOBS,
+      onClick = { onScreenSelected(AppScreen.NEW_JOBS) },
       icon = {
         Icon(
-          if (currentScreen == AppScreen.CALENDAR) Icons.Filled.CalendarMonth else Icons.Outlined.CalendarMonth,
-          contentDescription = "Calendar"
+          if (currentScreen == AppScreen.NEW_JOBS) Icons.Filled.Article else Icons.Outlined.Article,
+          contentDescription = "New"
         )
       },
-      label = { Text("Schedule", fontSize = 11.sp) },
+      label = { Text("New", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.NEW_JOBS) FontWeight.Bold else FontWeight.Normal) },
       colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = CleankrMagenta,
-        selectedTextColor = CleankrMagenta,
-        indicatorColor = CleankrMagenta.copy(alpha = 0.15f)
+        selectedIconColor = Color(0xFF1E1A22),
+        selectedTextColor = Color(0xFF1E1A22),
+        unselectedIconColor = Color(0xFF757575),
+        unselectedTextColor = Color(0xFF757575),
+        indicatorColor = Color(0xFFF0EDF5)
       )
     )
 
+    // 3. Ongoing Tab (with badge)
+    NavigationBarItem(
+      selected = currentScreen == AppScreen.HISTORY,
+      onClick = { onScreenSelected(AppScreen.HISTORY) },
+      icon = {
+        BadgedBox(
+          badge = {
+            Badge(
+              containerColor = CleankrRed,
+              contentColor = Color.White
+            ) {
+              Text(text = "$ongoingBadgeCount", fontSize = 9.sp, fontWeight = FontWeight.Bold)
+            }
+          }
+        ) {
+          Icon(
+            if (currentScreen == AppScreen.HISTORY) Icons.Filled.Schedule else Icons.Outlined.Schedule,
+            contentDescription = "Ongoing"
+          )
+        }
+      },
+      label = { Text("Ongoing", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.HISTORY) FontWeight.Bold else FontWeight.Normal) },
+      colors = NavigationBarItemDefaults.colors(
+        selectedIconColor = Color(0xFF1E1A22),
+        selectedTextColor = Color(0xFF1E1A22),
+        unselectedIconColor = Color(0xFF757575),
+        unselectedTextColor = Color(0xFF757575),
+        indicatorColor = Color(0xFFF0EDF5)
+      )
+    )
+
+    // 4. Target Tab
+    NavigationBarItem(
+      selected = currentScreen == AppScreen.TARGET,
+      onClick = { onScreenSelected(AppScreen.TARGET) },
+      icon = {
+        Icon(
+          if (currentScreen == AppScreen.TARGET) Icons.Filled.TrackChanges else Icons.Outlined.TrackChanges,
+          contentDescription = "Target"
+        )
+      },
+      label = { Text("Target", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.TARGET) FontWeight.Bold else FontWeight.Normal) },
+      colors = NavigationBarItemDefaults.colors(
+        selectedIconColor = Color(0xFF1E1A22),
+        selectedTextColor = Color(0xFF1E1A22),
+        unselectedIconColor = Color(0xFF757575),
+        unselectedTextColor = Color(0xFF757575),
+        indicatorColor = Color(0xFFF0EDF5)
+      )
+    )
+
+    // 5. Money Tab
     NavigationBarItem(
       selected = currentScreen == AppScreen.EARNINGS,
       onClick = { onScreenSelected(AppScreen.EARNINGS) },
       icon = {
         Icon(
-          if (currentScreen == AppScreen.EARNINGS) Icons.Filled.Payments else Icons.Outlined.Payments,
-          contentDescription = "Earnings"
+          if (currentScreen == AppScreen.EARNINGS) Icons.Filled.AccountBalanceWallet else Icons.Outlined.AccountBalanceWallet,
+          contentDescription = "Money"
         )
       },
-      label = { Text("Earnings", fontSize = 11.sp) },
+      label = { Text("Money", fontSize = 11.sp, fontWeight = if (currentScreen == AppScreen.EARNINGS) FontWeight.Bold else FontWeight.Normal) },
       colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = CleankrGreen,
-        selectedTextColor = CleankrGreen,
-        indicatorColor = CleankrGreen.copy(alpha = 0.15f)
+        selectedIconColor = Color(0xFF1E1A22),
+        selectedTextColor = Color(0xFF1E1A22),
+        unselectedIconColor = Color(0xFF757575),
+        unselectedTextColor = Color(0xFF757575),
+        indicatorColor = Color(0xFFF0EDF5)
       )
     )
+  }
+}
 
-    NavigationBarItem(
-      selected = currentScreen == AppScreen.HISTORY,
-      onClick = { onScreenSelected(AppScreen.HISTORY) },
-      icon = {
-        Icon(
-          if (currentScreen == AppScreen.HISTORY) Icons.Filled.Work else Icons.Outlined.WorkOutline,
-          contentDescription = "Jobs History"
-        )
-      },
-      label = { Text("Jobs", fontSize = 11.sp) },
-      colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = CleankrPeach,
-        selectedTextColor = CleankrPeach,
-        indicatorColor = CleankrPeach.copy(alpha = 0.15f)
+/**
+ * Floating Help Pill Button matching Screenshots 1, 2, 3, 5:
+ * Black rounded pill button [? Help] on bottom right
+ */
+@Composable
+fun CleankrHelpFloatingButton(
+  modifier: Modifier = Modifier,
+  onHelpClick: () -> Unit
+) {
+  Surface(
+    shape = RoundedCornerShape(24.dp),
+    color = Color(0xFF1E1E1E),
+    shadowElevation = 6.dp,
+    modifier = modifier
+      .clickable(onClick = onHelpClick)
+      .testTag("help_floating_button")
+  ) {
+    Row(
+      modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+      Icon(
+        imageVector = Icons.Default.HelpOutline,
+        contentDescription = "Help",
+        tint = Color.White,
+        modifier = Modifier.size(17.dp)
       )
-    )
-
-    NavigationBarItem(
-      selected = currentScreen == AppScreen.PROFILE,
-      onClick = { onScreenSelected(AppScreen.PROFILE) },
-      icon = {
-        Icon(
-          if (currentScreen == AppScreen.PROFILE) Icons.Filled.Person else Icons.Outlined.Person,
-          contentDescription = "Profile"
-        )
-      },
-      label = { Text("Profile", fontSize = 11.sp) },
-      colors = NavigationBarItemDefaults.colors(
-        selectedIconColor = CleankrViolet,
-        selectedTextColor = CleankrViolet,
-        indicatorColor = CleankrViolet.copy(alpha = 0.15f)
+      Text(
+        text = "Help",
+        color = Color.White,
+        fontSize = 13.sp,
+        fontWeight = FontWeight.Bold
       )
-    )
+    }
   }
 }

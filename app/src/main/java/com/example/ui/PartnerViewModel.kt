@@ -28,10 +28,12 @@ enum class AppScreen {
   AUTH,
   KYC,
   DASHBOARD,
+  NEW_JOBS,
   JOB_DETAILS,
   CALENDAR,
   EARNINGS,
   HISTORY,
+  TARGET,
   SECURITY_CENTER,
   NOTIFICATIONS,
   HELP_SUPPORT,
@@ -84,11 +86,39 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
   val authErrorMessage: StateFlow<String?> = _authErrorMessage.asStateFlow()
 
   // Settings: Theme & Language
-  private val _themeMode = MutableStateFlow(ThemeMode.DARK) // Default dark sleek theme
+  private val _themeMode = MutableStateFlow(ThemeMode.LIGHT) // Clean white theme matching screenshots
   val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
   private val _language = MutableStateFlow(AppLanguage.ENGLISH)
   val language: StateFlow<AppLanguage> = _language.asStateFlow()
+
+  // Daily Check-in & Coins State (Matching Urban Company Partner UI)
+  private val _isCheckedIn = MutableStateFlow(false)
+  val isCheckedIn: StateFlow<Boolean> = _isCheckedIn.asStateFlow()
+
+  private val _coinsBalance = MutableStateFlow(77)
+  val coinsBalance: StateFlow<Int> = _coinsBalance.asStateFlow()
+
+  fun toggleCheckIn() {
+    val newState = !_isCheckedIn.value
+    _isCheckedIn.value = newState
+    if (newState) {
+      _coinsBalance.value += 10
+      _userFeedback.value = "Checked in successfully! +10 Cleankr Coins added. Have a safe day!"
+      repository.setOnlineStatus(true)
+    } else {
+      _userFeedback.value = "Checked out for today. See you tomorrow!"
+    }
+  }
+
+  fun triggerSosEmergency() {
+    _userFeedback.value = "Emergency SOS Alert sent to Cleankr Security Control & nearest hub!"
+    repository.recordAuditLog(
+      eventType = "SOS_EMERGENCY_TRIGGERED",
+      details = "Partner triggered SOS emergency from top bar",
+      severity = "CRITICAL"
+    )
+  }
 
   // Data streams from repository
   val isOnline: StateFlow<Boolean> = repository.isOnline
@@ -328,6 +358,17 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
   fun deleteLeave(id: String) {
     repository.deleteLeave(id)
     _userFeedback.value = "Leave removed."
+  }
+
+  fun toggleLeaveForDate(date: String, reason: String = "Personal Day Off") {
+    val existing = leaves.value.find { it.date == date }
+    if (existing != null) {
+      deleteLeave(existing.id)
+      _userFeedback.value = "Leave cancelled for $date. You are marked AVAILABLE."
+    } else {
+      applyLeave(date, reason)
+      _userFeedback.value = "Leave marked for $date. You are marked OFF."
+    }
   }
 
   // --- Earnings & Withdrawal ---

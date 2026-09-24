@@ -1,16 +1,18 @@
-name: Build Cleankr Partner APK
+name: Build Cleankr Partner App
 
 on:
-  workflow_dispatch:
   push:
     branches:
       - main
+      - master
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  build-apk:
+  build:
+    name: Build Android Artifacts (APK & AAB)
     runs-on: ubuntu-latest
 
     steps:
@@ -23,16 +25,40 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Set up Gradle
+      - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '9.3.1'
 
-      - name: Build Debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Make Gradle wrapper executable
+        run: chmod +x gradlew
 
-      - name: Upload APK
+      - name: Build Debug APK, Release APK and Release AAB
+        env:
+          KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: ./gradlew assembleDebug assembleRelease bundleRelease --stacktrace
+
+      - name: Upload Debug APK
         uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: cleankr-partner-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cleankr-partner-release-apk
+          path: app/build/outputs/apk/release/*.apk
+          if-no-files-found: warn
+
+      - name: Upload Release AAB (App Bundle)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cleankr-partner-release-aab
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: warn
