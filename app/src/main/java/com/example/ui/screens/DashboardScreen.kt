@@ -56,11 +56,44 @@ import com.example.ui.components.CleankrHelpFloatingButton
 import com.example.ui.theme.CleankrGreen
 import com.example.ui.theme.CleankrRed
 import com.example.ui.theme.CleankrViolet
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
+
+private var hasRequestedNotificationPermissionOnce = false
 
 @Composable
 fun DashboardScreen(viewModel: PartnerViewModel) {
+  val context = LocalContext.current
   val isCheckedIn by viewModel.isCheckedIn.collectAsState()
   val allJobs by viewModel.allJobs.collectAsState()
+
+  // Graceful Android 13+ Notification Permission Request (Prompted once politely, no harassment)
+  val notificationPermissionLauncher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestPermission()
+  ) { isGranted ->
+    if (!isGranted) {
+      // Graceful fallback - push notifications disabled, sound/in-app banners remain active
+    }
+  }
+
+  LaunchedEffect(Unit) {
+    if (!hasRequestedNotificationPermissionOnce && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      val isGranted = ContextCompat.checkSelfPermission(
+        context,
+        Manifest.permission.POST_NOTIFICATIONS
+      ) == PackageManager.PERMISSION_GRANTED
+      if (!isGranted) {
+        hasRequestedNotificationPermissionOnce = true
+        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+      }
+    }
+  }
 
   // New incoming job dispatch alert (Jobs with status ASSIGNED)
   val newJobRequest = allJobs.find { it.status == JobStatus.ASSIGNED }

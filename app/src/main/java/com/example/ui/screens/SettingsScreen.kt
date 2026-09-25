@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -8,14 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Policy
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,6 +48,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.AppLanguage
+import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
 import com.example.ui.ThemeMode
 import com.example.ui.theme.CleankrCoral
@@ -174,7 +179,7 @@ fun SettingsScreen(
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically
             ) {
-              Column {
+              Column(modifier = Modifier.weight(1f)) {
                 Text("Push Notifications", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
                 Text("Booking reminders, payout receipts and policy notices", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
               }
@@ -184,6 +189,62 @@ fun SettingsScreen(
                 colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CleankrCoral)
               )
             }
+
+            // System App Notification Settings Shortcut for permanently denied or deep config
+            val context = androidx.compose.ui.platform.LocalContext.current
+            androidx.compose.material3.OutlinedButton(
+              onClick = {
+                try {
+                  val intent = android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                  }
+                  context.startActivity(intent)
+                } catch (e: Exception) {
+                  val fallback = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                    data = android.net.Uri.fromParts("package", context.packageName, null)
+                  }
+                  context.startActivity(fallback)
+                }
+              },
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.fillMaxWidth().testTag("system_notification_settings_button")
+            ) {
+              Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.size(6.dp))
+              Text("Device Notification Permission Settings", fontSize = 12.sp)
+            }
+          }
+        }
+      }
+
+      // Privacy & Legal Section
+      item {
+        Text("Privacy & Legal Compliance", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+        Spacer(modifier = Modifier.height(6.dp))
+        Card(
+          shape = RoundedCornerShape(14.dp),
+          colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+          modifier = Modifier
+            .fillMaxWidth()
+            .clickable { viewModel.navigateTo(AppScreen.PRIVACY_LEGAL) }
+            .testTag("settings_privacy_legal_card")
+        ) {
+          Row(
+            modifier = Modifier.padding(14.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+              Icon(Icons.Default.Policy, contentDescription = null, tint = CleankrCoral)
+              Column {
+                Text("Privacy & Legal Hub", fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                Text("Privacy policy, terms, refunds & account deletion", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+            }
+            Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
           }
         }
       }

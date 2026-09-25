@@ -410,12 +410,16 @@ fun CleankrDrawerContent(
       viewModel.navigateTo(AppScreen.HELP_SUPPORT)
       onCloseDrawer()
     }
+    DrawerSimpleItem("Privacy & Legal") {
+      viewModel.navigateTo(AppScreen.PRIVACY_LEGAL)
+      onCloseDrawer()
+    }
     DrawerSimpleItem("Terms of use") {
-      viewModel.navigateTo(AppScreen.PRIVACY_POLICY)
+      viewModel.navigateTo(AppScreen.PRIVACY_LEGAL)
       onCloseDrawer()
     }
     DrawerSimpleItem("Privacy policy") {
-      viewModel.navigateTo(AppScreen.PRIVACY_POLICY)
+      viewModel.navigateTo(AppScreen.PRIVACY_LEGAL)
       onCloseDrawer()
     }
     DrawerSimpleItem("Welfare policy") {

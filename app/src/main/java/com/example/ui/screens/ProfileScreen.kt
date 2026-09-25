@@ -204,6 +204,14 @@ fun ProfileScreen(viewModel: PartnerViewModel) {
           ProfileMenuItem(
             icon = Icons.Default.Policy,
             iconTint = CleankrPeach,
+            title = "Privacy & Legal",
+            subtitle = "Privacy policy, terms, refunds & account deletion",
+            onClick = { viewModel.navigateTo(AppScreen.PRIVACY_LEGAL) }
+          )
+
+          ProfileMenuItem(
+            icon = Icons.Default.Policy,
+            iconTint = CleankrPeach,
             title = "Privacy Policy (Sept 3, 2026)",
             subtitle = "Data usage, telephony masking & no-sale policy",
             onClick = { viewModel.navigateTo(AppScreen.PRIVACY_POLICY) }

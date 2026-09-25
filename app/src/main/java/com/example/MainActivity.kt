@@ -44,6 +44,7 @@ import com.example.ui.screens.KycScreen
 import com.example.ui.screens.NewJobsScreen
 import com.example.ui.screens.NotificationsScreen
 import com.example.ui.screens.PrivacyPolicyScreen
+import com.example.ui.screens.PrivacyLegalScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.SecurityCenterScreen
 import com.example.ui.screens.SettingsScreen
@@ -57,6 +58,10 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+
+    // Safely initialize FCM and retrieve token when network/Play Services are available
+    com.example.notifications.CleankrMessagingService.fetchTokenSafely(applicationContext)
+
     setContent {
       val themeMode by viewModel.themeMode.collectAsState()
       val isDark = when (themeMode) {
@@ -143,6 +148,7 @@ fun CleankrPartnerApp(viewModel: PartnerViewModel) {
             AppScreen.PROFILE -> "Partner Profile"
             AppScreen.SETTINGS -> "Settings"
             AppScreen.PRIVACY_POLICY -> "Privacy Policy"
+            AppScreen.PRIVACY_LEGAL -> "Privacy & Legal"
             AppScreen.ACCOUNT_DELETION -> "Delete Account"
             else -> null
           },
@@ -212,6 +218,10 @@ fun CleankrPartnerApp(viewModel: PartnerViewModel) {
             onBack = { viewModel.navigateTo(AppScreen.PROFILE) }
           )
           AppScreen.PRIVACY_POLICY -> PrivacyPolicyScreen(
+            onBack = { viewModel.navigateTo(AppScreen.PROFILE) }
+          )
+          AppScreen.PRIVACY_LEGAL -> PrivacyLegalScreen(
+            viewModel = viewModel,
             onBack = { viewModel.navigateTo(AppScreen.PROFILE) }
           )
           AppScreen.ACCOUNT_DELETION -> AccountDeletionScreen(

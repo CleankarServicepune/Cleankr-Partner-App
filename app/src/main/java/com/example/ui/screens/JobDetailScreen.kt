@@ -696,9 +696,25 @@ fun JobDetailScreen(
       onDismissRequest = { showCancelDialog = false },
       title = { Text("Cancel Active Job") },
       text = {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
           Text("Customer will be notified and this cancellation will be recorded in your partner audit logs.")
-          Spacer(modifier = Modifier.height(8.dp))
+          Text("Quick selection:", fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            OutlinedButton(
+              onClick = { cancellationReason = "Customer unavailable / Door locked after 3 calls" },
+              contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+              modifier = Modifier.weight(1f)
+            ) {
+              Text("Customer Unavailable", fontSize = 10.sp)
+            }
+            OutlinedButton(
+              onClick = { cancellationReason = "Partner vehicle breakdown / equipment issue" },
+              contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+              modifier = Modifier.weight(1f)
+            ) {
+              Text("Emergency / Breakdown", fontSize = 10.sp)
+            }
+          }
           OutlinedTextField(
             value = cancellationReason,
             onValueChange = { cancellationReason = it },

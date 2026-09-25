@@ -1,6 +1,8 @@
 package com.example.data.repository
 
 import android.content.Context
+import com.example.data.firebase.CleankrFirebaseConfig
+import com.example.data.firebase.CleankrFirebaseService
 import com.example.data.local.AppDatabase
 import com.example.data.local.AuditLogEntity
 import com.example.data.local.JobEntity
@@ -38,6 +40,10 @@ class PartnerRepository(private val context: Context) {
   private val auditDao = database.auditDao()
   private val leaveDao = database.leaveDao()
   private val repositoryScope = CoroutineScope(Dispatchers.IO)
+
+  val firebaseService = CleankrFirebaseService(context)
+  private val _firebaseStatus = MutableStateFlow(CleankrFirebaseConfig.checkStatus(context))
+  val firebaseStatus: StateFlow<CleankrFirebaseConfig.FirebaseConfigStatus> = _firebaseStatus.asStateFlow()
 
   // In-memory state for Partner Profile & Online Duty
   private val _isOnline = MutableStateFlow(true)
@@ -151,6 +157,10 @@ class PartnerRepository(private val context: Context) {
         details = "Job #$jobId transitioned from ${existing.status} to ${newStatus.name}"
       )
 
+      if (firebaseService.isAvailable()) {
+        firebaseService.updateBookingStatus(jobId, _profile.value.id, newStatus)
+      }
+
       if (newStatus == JobStatus.COMPLETED) {
         _earnings.value = _earnings.value.copy(
           todayEarnings = _earnings.value.todayEarnings + existing.estimatedEarnings,
@@ -210,6 +220,16 @@ class PartnerRepository(private val context: Context) {
         eventType = "SERVICE_CHANGE_REQUESTED",
         details = "Job #$jobId: Requested extra ₹${requestedAmount.toInt()} for '$serviceItem'. Status: Pending Admin Approval"
       )
+
+      if (firebaseService.isAvailable()) {
+        firebaseService.submitServiceChangeRequest(
+          bookingId = jobId,
+          partnerId = _profile.value.id,
+          serviceItem = serviceItem,
+          requestedAmount = requestedAmount,
+          partnerReason = partnerReason
+        )
+      }
 
       addNotification(
         title = "Service Change Submitted",
@@ -365,6 +385,14 @@ class PartnerRepository(private val context: Context) {
       eventType = "ACCOUNT_DELETION_REQUEST",
       details = "Partner initiated account and data deletion request (Ticket: $ticketId)"
     )
+    if (firebaseService.isAvailable()) {
+      repositoryScope.launch {
+        firebaseService.submitAccountDeletionRequest(
+          partnerId = _profile.value.id,
+          reason = "Partner requested account deletion via App settings"
+        )
+      }
+    }
     return ticketId
   }
 

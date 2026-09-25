@@ -40,7 +40,8 @@ enum class AppScreen {
   PROFILE,
   SETTINGS,
   PRIVACY_POLICY,
-  ACCOUNT_DELETION
+  ACCOUNT_DELETION,
+  PRIVACY_LEGAL
 }
 
 enum class AppLanguage {
@@ -142,6 +143,7 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     initialValue = emptyList()
   )
   val securityState: StateFlow<SecurityCheckResult> = securityManager.securityState
+  val firebaseStatus = repository.firebaseStatus
 
   // Selected Job derived state
   val selectedJob: StateFlow<Job?> = combine(allJobs, _selectedJobId) { jobs, id ->
@@ -247,6 +249,8 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
   }
 
   fun logout() {
+    val partnerId = profile.value.id
+    com.example.notifications.CleankrMessagingService.deactivateTokenOnLogout(partnerId)
     securityManager.invalidateCompromisedSession()
     _isAuthenticated.value = false
     _isOtpSent.value = false
@@ -260,6 +264,8 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
   }
 
   fun panicLogout() {
+    val partnerId = profile.value.id
+    com.example.notifications.CleankrMessagingService.deactivateTokenOnLogout(partnerId)
     securityManager.invalidateCompromisedSession()
     _isAuthenticated.value = false
     _currentScreen.value = AppScreen.AUTH
