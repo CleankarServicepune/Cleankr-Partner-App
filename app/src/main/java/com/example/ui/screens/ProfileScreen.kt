@@ -58,6 +58,7 @@ import com.example.ui.theme.CleankrGreen
 import com.example.ui.theme.CleankrMagenta
 import com.example.ui.theme.CleankrPeach
 import com.example.ui.theme.CleankrRed
+import com.example.ui.theme.CleankrViolet
 
 @Composable
 fun ProfileScreen(viewModel: PartnerViewModel) {
@@ -156,8 +157,9 @@ fun ProfileScreen(viewModel: PartnerViewModel) {
               Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = CleankrGreen, modifier = Modifier.size(22.dp))
             }
             Column {
-              Text("KYC & Payout Account", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-              Text("Aadhaar, PAN & Bank Details Verified", fontSize = 11.sp, color = CleankrGreen)
+              Text("KYC & Bank Verification", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+              Text("Aadhaar, PAN & Bank Account Verified", fontSize = 11.sp, color = CleankrGreen)
+              Text("NSDC / Skill India: ${profile.nsdcDetails.verificationStatus.name.replace("_", " ")}", fontSize = 10.sp, color = CleankrViolet, fontWeight = FontWeight.Medium)
             }
           }
           Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)

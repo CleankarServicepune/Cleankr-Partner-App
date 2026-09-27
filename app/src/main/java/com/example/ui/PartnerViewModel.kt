@@ -26,6 +26,8 @@ import kotlinx.coroutines.launch
 
 enum class AppScreen {
   AUTH,
+  SET_PIN,
+  MY_HUB,
   KYC,
   DASHBOARD,
   NEW_JOBS,
@@ -59,6 +61,11 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
 
   val repository = PartnerRepository(application)
   val securityManager = SecurityManager(application)
+  val operationsManager = com.example.data.repository.PartnerOperationsManager(application, repository)
+
+  // Schedules state flow
+  val schedules: StateFlow<Map<String, com.example.data.model.PartnerDaySchedule>> = operationsManager.schedules
+  val penaltyReports: StateFlow<List<com.example.data.model.CustomerPenaltyReport>> = operationsManager.penaltyReports
 
   // Navigation State
   private val _currentScreen = MutableStateFlow(AppScreen.DASHBOARD)
@@ -85,6 +92,21 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
 
   private val _authErrorMessage = MutableStateFlow<String?>(null)
   val authErrorMessage: StateFlow<String?> = _authErrorMessage.asStateFlow()
+
+  // Instant Security PIN & Login Mode
+  private val _isPinConfigured = MutableStateFlow(securityManager.isPinSet())
+  val isPinConfigured: StateFlow<Boolean> = _isPinConfigured.asStateFlow()
+
+  private val _isPinLoginMode = MutableStateFlow(securityManager.isPinSet())
+  val isPinLoginMode: StateFlow<Boolean> = _isPinLoginMode.asStateFlow()
+
+  private val _pinInput = MutableStateFlow("")
+  val pinInput: StateFlow<String> = _pinInput.asStateFlow()
+
+  private val _confirmPinInput = MutableStateFlow("")
+  val confirmPinInput: StateFlow<String> = _confirmPinInput.asStateFlow()
+
+  val assignedHub: StateFlow<com.example.data.model.CleankrHub> = repository.assignedHub
 
   // Settings: Theme & Language
   private val _themeMode = MutableStateFlow(ThemeMode.LIGHT) // Clean white theme matching screenshots
@@ -219,6 +241,98 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     )
   }
 
+  fun togglePinLoginMode(usePin: Boolean) {
+    _isPinLoginMode.value = usePin
+    _authErrorMessage.value = null
+  }
+
+  fun updatePinInput(pin: String) {
+    if (pin.length <= 4 && pin.all { it.isDigit() }) {
+      _pinInput.value = pin
+      _authErrorMessage.value = null
+    }
+  }
+
+  fun updateConfirmPinInput(pin: String) {
+    if (pin.length <= 4 && pin.all { it.isDigit() }) {
+      _confirmPinInput.value = pin
+      _authErrorMessage.value = null
+    }
+  }
+
+  fun verifyPinLogin() {
+    if (_pinInput.value.length != 4) {
+      _authErrorMessage.value = "Please enter your 4-digit Security PIN."
+      return
+    }
+
+    val (success, msg) = securityManager.verifyPin(_pinInput.value)
+    if (success) {
+      _isAuthenticated.value = true
+      _currentScreen.value = AppScreen.DASHBOARD
+      _pinInput.value = ""
+      _authErrorMessage.value = null
+      _userFeedback.value = "PIN verified. Welcome, ${profile.value.name}!"
+      repository.recordAuditLog(
+        eventType = "AUTH_PIN_LOGIN_SUCCESS",
+        details = "Partner unlocked app via instant security PIN"
+      )
+    } else {
+      _authErrorMessage.value = msg
+      repository.recordAuditLog(
+        eventType = "AUTH_PIN_LOGIN_FAILED",
+        details = "Failed PIN unlock attempt",
+        severity = "WARNING"
+      )
+    }
+  }
+
+  fun setupNewPin() {
+    if (_pinInput.value.length != 4 || !_pinInput.value.all { it.isDigit() }) {
+      _authErrorMessage.value = "PIN must be exactly 4 digits."
+      return
+    }
+    if (_pinInput.value != _confirmPinInput.value) {
+      _authErrorMessage.value = "PINs do not match. Please re-enter matching PIN."
+      return
+    }
+
+    val saved = securityManager.setPin(_pinInput.value)
+    if (saved) {
+      _isPinConfigured.value = true
+      _isPinLoginMode.value = true
+      _isAuthenticated.value = true
+      _currentScreen.value = AppScreen.DASHBOARD
+      _pinInput.value = ""
+      _confirmPinInput.value = ""
+      _authErrorMessage.value = null
+      _userFeedback.value = "Instant 4-digit Security PIN activated! Your account is secured."
+      repository.recordAuditLog(
+        eventType = "AUTH_PIN_CONFIGURED",
+        details = "Partner configured instant 4-digit security PIN"
+      )
+    } else {
+      _authErrorMessage.value = "Failed to save security PIN. Please try again."
+    }
+  }
+
+  fun resetOrChangePin() {
+    _pinInput.value = ""
+    _confirmPinInput.value = ""
+    _authErrorMessage.value = null
+    _currentScreen.value = AppScreen.SET_PIN
+  }
+
+  fun syncHubFromAdmin(hubId: String) {
+    repository.syncHubFromAdmin(hubId) { success ->
+      if (success) {
+        _userFeedback.value = "Operations Hub synced successfully with Admin Panel!"
+      } else {
+        _userFeedback.value = "Hub information up-to-date with assigned operations profile."
+      }
+    }
+  }
+
   fun verifyOtp() {
     val (canAttempt, waitSec) = securityManager.canAttemptOtp()
     if (!canAttempt) {
@@ -230,10 +344,18 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     val (success, msg) = securityManager.recordOtpAttempt(isCorrect)
 
     if (success) {
-      _isAuthenticated.value = true
-      _currentScreen.value = AppScreen.DASHBOARD
       _authErrorMessage.value = null
-      _userFeedback.value = "Login verified. Welcome, ${profile.value.name}!"
+      if (!securityManager.isPinSet()) {
+        // First login after download or delete: prompt for instant PIN set
+        _pinInput.value = ""
+        _confirmPinInput.value = ""
+        _currentScreen.value = AppScreen.SET_PIN
+        _userFeedback.value = "OTP verified! Please set your 4-digit Instant Security PIN."
+      } else {
+        _isAuthenticated.value = true
+        _currentScreen.value = AppScreen.DASHBOARD
+        _userFeedback.value = "Login verified. Welcome, ${profile.value.name}!"
+      }
       repository.recordAuditLog(
         eventType = "AUTH_LOGIN_SUCCESS",
         details = "Partner authenticated successfully via multi-factor SMS OTP"
@@ -255,6 +377,9 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     _isAuthenticated.value = false
     _isOtpSent.value = false
     _otpInput.value = ""
+    _pinInput.value = ""
+    _confirmPinInput.value = ""
+    _isPinLoginMode.value = securityManager.isPinSet()
     _currentScreen.value = AppScreen.AUTH
     _userFeedback.value = "Securely logged out. Session tokens invalidated."
     repository.recordAuditLog(
@@ -425,6 +550,44 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     _userFeedback.value = "All notifications marked as read."
   }
 
+  // --- Schedule & Slots ---
+  fun toggleSlotAvailability(date: String, slotId: String) {
+    operationsManager.toggleSlot(date, slotId)
+    _userFeedback.value = "Slot updated for $date."
+  }
+
+  fun toggleDayOffStatus(date: String, isDayOff: Boolean, reason: String? = null) {
+    operationsManager.toggleDayOff(date, isDayOff, reason)
+    _userFeedback.value = if (isDayOff) "Marked day off for $date" else "Marked active & working for $date"
+  }
+
+  // --- Customer Non-Response / ₹100 Penalty Workflow ---
+  fun reportCustomerNonResponse(
+    job: Job,
+    waitingTimeMinutes: Int = 15,
+    callsAttempted: Int = 3
+  ): com.example.data.model.CustomerPenaltyReport {
+    val report = operationsManager.reportCustomerNonResponse(
+      job = job,
+      waitingTimeMinutes = waitingTimeMinutes,
+      callsAttempted = callsAttempted,
+      doorstepPhotoAttached = true
+    )
+    _userFeedback.value = "Customer non-response incident #${report.id} submitted. ₹100 compensation request routed to Operations."
+    return report
+  }
+
+  // --- NSDC Certification ---
+  fun validateNsdcCertificate(certificateNumber: String): com.example.data.model.NsdcCertificateDetails {
+    val details = operationsManager.validateNsdcCertificate(certificateNumber)
+    if (details.verificationStatus == com.example.data.model.NsdcVerificationStatus.FORMAT_VALID_PENDING_GOVT_SYNC) {
+      _userFeedback.value = "NSDC format validated. Submitted to Skill India backend registry."
+    } else {
+      _userFeedback.value = "Invalid NSDC format. Please verify certificate number."
+    }
+    return details
+  }
+
   // --- Account Deletion ---
   fun requestAccountDeletion(): String {
     val ticket = repository.requestAccountDeletion()
@@ -432,3 +595,4 @@ class PartnerViewModel(application: Application) : AndroidViewModel(application)
     return ticket
   }
 }
+

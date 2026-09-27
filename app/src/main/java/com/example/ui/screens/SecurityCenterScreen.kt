@@ -58,6 +58,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ThreatLevel
+import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
 import com.example.ui.theme.CleankrAmber
 import com.example.ui.theme.CleankrAmberContainer
@@ -75,6 +76,7 @@ import java.util.Locale
 fun SecurityCenterScreen(viewModel: PartnerViewModel) {
   val securityState by viewModel.securityState.collectAsState()
   val auditLogs by viewModel.auditLogs.collectAsState()
+  val isPinConfigured by viewModel.isPinConfigured.collectAsState()
 
   var showPanicDialog by remember { mutableStateOf(false) }
 
@@ -216,6 +218,30 @@ fun SecurityCenterScreen(viewModel: PartnerViewModel) {
               onCheckedChange = { viewModel.toggleAppLock() },
               colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = CleankrMagenta)
             )
+          }
+
+          // PIN Configuration Row
+          Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 46.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text(
+              text = if (isPinConfigured) "Security PIN: Configured (4-digits)" else "Security PIN: Not Set",
+              fontSize = 12.sp,
+              fontWeight = FontWeight.Medium,
+              color = if (isPinConfigured) CleankrGreen else CleankrAmber
+            )
+            TextButton(
+              onClick = { viewModel.navigateTo(AppScreen.SET_PIN) }
+            ) {
+              Text(
+                text = if (isPinConfigured) "Change PIN" else "Set Up PIN",
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = CleankrCyan
+              )
+            }
           }
 
           // Anti-Tamper & Signature Verification

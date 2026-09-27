@@ -10,6 +10,7 @@ import com.example.data.local.LeaveEntity
 import com.example.data.model.ApprovalStatus
 import com.example.data.model.AuditLogEntry
 import com.example.data.model.CalendarLeaveEntry
+import com.example.data.model.CleankrHub
 import com.example.data.model.EarningSummary
 import com.example.data.model.Job
 import com.example.data.model.JobStatus
@@ -23,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -353,6 +355,16 @@ class PartnerRepository(private val context: Context) {
     }
   }
 
+  fun removeLeaveForDate(date: String) {
+    repositoryScope.launch {
+      leaveDao.deleteLeaveByDate(date)
+      recordAuditLog(
+        eventType = "LEAVE_REMOVED",
+        details = "Partner marked available on $date"
+      )
+    }
+  }
+
   fun submitKycUpdate(
     aadhaarNumber: String,
     panNumber: String,
@@ -601,5 +613,56 @@ class PartnerRepository(private val context: Context) {
       rescheduledDate = entity.rescheduledDate,
       assignedTimestamp = entity.assignedTimestamp
     )
+  }
+
+  // --- Operations Hub Management & Admin Sync ---
+  private val _assignedHub = MutableStateFlow(CleankrHub())
+  val assignedHub: StateFlow<CleankrHub> = _assignedHub.asStateFlow()
+
+  fun updateAssignedHub(hub: CleankrHub) {
+    _assignedHub.value = hub
+    _profile.value = _profile.value.copy(assignedHub = hub)
+    recordAuditLog(
+      eventType = "HUB_UPDATED",
+      details = "Operations hub assigned: ${hub.hubName} (${hub.hubCode})"
+    )
+  }
+
+  fun syncHubFromAdmin(hubId: String, onComplete: ((Boolean) -> Unit)? = null) {
+    val firestore = CleankrFirebaseConfig.getFirestore()
+    if (firestore == null) {
+      onComplete?.invoke(false)
+      return
+    }
+    repositoryScope.launch {
+      try {
+        val doc = firestore.collection(CleankrFirebaseConfig.Collections.HUBS).document(hubId).get().await()
+        if (doc.exists()) {
+          val data = doc.data
+          if (data != null) {
+            val hub = CleankrHub(
+              hubId = doc.id,
+              hubName = data["hubName"] as? String ?: _assignedHub.value.hubName,
+              hubCode = data["hubCode"] as? String ?: _assignedHub.value.hubCode,
+              address = data["address"] as? String ?: _assignedHub.value.address,
+              city = data["city"] as? String ?: _assignedHub.value.city,
+              zone = data["zone"] as? String ?: _assignedHub.value.zone,
+              hubManagerName = data["hubManagerName"] as? String ?: _assignedHub.value.hubManagerName,
+              hubManagerPhone = data["hubManagerPhone"] as? String ?: _assignedHub.value.hubManagerPhone,
+              hubTimings = data["hubTimings"] as? String ?: _assignedHub.value.hubTimings,
+              latitude = (data["latitude"] as? Number)?.toDouble() ?: _assignedHub.value.latitude,
+              longitude = (data["longitude"] as? Number)?.toDouble() ?: _assignedHub.value.longitude,
+              status = data["status"] as? String ?: "Active Hub"
+            )
+            updateAssignedHub(hub)
+            onComplete?.invoke(true)
+            return@launch
+          }
+        }
+        onComplete?.invoke(false)
+      } catch (e: Exception) {
+        onComplete?.invoke(false)
+      }
+    }
   }
 }

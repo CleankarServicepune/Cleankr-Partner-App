@@ -149,6 +149,73 @@ class SecurityManager(private val context: Context) {
     return !current
   }
 
+  // --- Instant PIN Management (SHA-256 Hashed Local Security) ---
+  private val prefs = context.getSharedPreferences("cleankr_partner_security_prefs", Context.MODE_PRIVATE)
+  private val PREF_PIN_HASH = "partner_pin_hash"
+  private val PREF_PIN_SET = "partner_pin_is_set"
+  private var pinFailedAttempts = 0
+
+  fun isPinSet(): Boolean {
+    return prefs.getBoolean(PREF_PIN_SET, false) && prefs.getString(PREF_PIN_HASH, null) != null
+  }
+
+  fun setPin(pin: String): Boolean {
+    if (pin.length != 4 || !pin.all { it.isDigit() }) return false
+    val hash = hashString(pin)
+    prefs.edit()
+      .putString(PREF_PIN_HASH, hash)
+      .putBoolean(PREF_PIN_SET, true)
+      .apply()
+    pinFailedAttempts = 0
+    return true
+  }
+
+  fun verifyPin(pin: String): Pair<Boolean, String> {
+    val now = SystemClock.elapsedRealtime()
+    if (now < lockoutUntilTime) {
+      val remainingSec = (lockoutUntilTime - now) / 1000
+      return Pair(false, "Rate limit active. Please wait $remainingSec seconds.")
+    }
+
+    if (!isPinSet()) {
+      return Pair(false, "No Security PIN configured. Please authenticate via OTP first.")
+    }
+
+    val storedHash = prefs.getString(PREF_PIN_HASH, "") ?: ""
+    val inputHash = hashString(pin)
+
+    if (inputHash == storedHash) {
+      pinFailedAttempts = 0
+      val newToken = "CK_SEC_PIN_TOK_" + UUID.randomUUID().toString().take(16)
+      currentSessionToken = newToken
+      activeSessions.clear()
+      activeSessions.add(newToken)
+      return Pair(true, "PIN verified successfully")
+    } else {
+      pinFailedAttempts++
+      if (pinFailedAttempts >= MAX_OTP_ATTEMPTS) {
+        lockoutUntilTime = now + LOCKOUT_DURATION_MS
+        pinFailedAttempts = 0
+        return Pair(false, "Too many incorrect PIN attempts. Security lockout active for 60 seconds.")
+      }
+      val rem = MAX_OTP_ATTEMPTS - pinFailedAttempts
+      return Pair(false, "Incorrect PIN. $rem attempt(s) remaining.")
+    }
+  }
+
+  fun clearPin() {
+    prefs.edit()
+      .remove(PREF_PIN_HASH)
+      .putBoolean(PREF_PIN_SET, false)
+      .apply()
+    pinFailedAttempts = 0
+  }
+
+  private fun hashString(input: String): String {
+    val bytes = java.security.MessageDigest.getInstance("SHA-256").digest(input.toByteArray())
+    return bytes.joinToString("") { "%02x".format(it) }
+  }
+
   // --- Root & Tamper Detection Helpers ---
   private fun checkRootMethod1(): Boolean {
     val buildTags = Build.TAGS

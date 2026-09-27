@@ -102,6 +102,9 @@ interface LeaveDao {
 
   @Query("DELETE FROM partner_leaves WHERE id = :id")
   suspend fun deleteLeave(id: String)
+
+  @Query("DELETE FROM partner_leaves WHERE date = :date")
+  suspend fun deleteLeaveByDate(date: String)
 }
 
 class JsonConverters {

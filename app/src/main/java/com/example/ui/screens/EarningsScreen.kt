@@ -54,7 +54,9 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
 import com.example.ui.components.CleankrHelpFloatingButton
+import com.example.ui.theme.CleankrCoral
 import com.example.ui.theme.CleankrGreen
+import com.example.ui.theme.CleankrViolet
 
 @Composable
 fun EarningsScreen(viewModel: PartnerViewModel) {
@@ -335,10 +337,57 @@ fun EarningsScreen(viewModel: PartnerViewModel) {
               }
               Button(
                 onClick = { showWithdrawDialog = true },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF5A31F4)),
+                colors = ButtonDefaults.buttonColors(containerColor = CleankrCoral),
                 shape = RoundedCornerShape(8.dp)
               ) {
                 Text("Instant Payout", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+              }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Linked BankAccountDetails Card
+            val profile by viewModel.profile.collectAsState()
+            Surface(
+              shape = RoundedCornerShape(8.dp),
+              color = Color(0xFFF9F7FA),
+              modifier = Modifier.fillMaxWidth()
+            ) {
+              Row(
+                modifier = Modifier.padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+              ) {
+                Row(
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                  Icon(Icons.Default.AccountBalance, contentDescription = null, tint = CleankrViolet, modifier = Modifier.size(18.dp))
+                  Column {
+                    Text(
+                      text = "${profile.bankAccountDetails.bankName} • ${profile.bankAccountDetails.accountNumberMasked}",
+                      fontSize = 12.sp,
+                      fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                      text = "IFSC: ${profile.bankAccountDetails.ifscCode} | UPI: ${profile.bankAccountDetails.upiId}",
+                      fontSize = 10.sp,
+                      color = Color.Gray
+                    )
+                  }
+                }
+                Surface(
+                  shape = RoundedCornerShape(4.dp),
+                  color = CleankrGreen.copy(alpha = 0.15f)
+                ) {
+                  Text(
+                    text = "VERIFIED",
+                    color = CleankrGreen,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                  )
+                }
               }
             }
           }

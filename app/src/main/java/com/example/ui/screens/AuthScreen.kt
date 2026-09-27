@@ -54,6 +54,7 @@ import com.example.ui.theme.CleankrCoralDark
 import com.example.ui.theme.CleankrCyan
 import com.example.ui.theme.CleankrMagenta
 import com.example.ui.theme.CleankrRed
+import com.example.ui.theme.CleankrViolet
 
 @Composable
 fun AuthScreen(viewModel: PartnerViewModel) {
@@ -63,6 +64,10 @@ fun AuthScreen(viewModel: PartnerViewModel) {
   val timer by viewModel.otpTimerSeconds.collectAsState()
   val errorMsg by viewModel.authErrorMessage.collectAsState()
   val securityState by viewModel.securityState.collectAsState()
+  val isPinConfigured by viewModel.isPinConfigured.collectAsState()
+  val isPinLoginMode by viewModel.isPinLoginMode.collectAsState()
+  val pinInput by viewModel.pinInput.collectAsState()
+  val profile by viewModel.profile.collectAsState()
 
   val scrollState = rememberScrollState()
 
@@ -119,37 +124,35 @@ fun AuthScreen(viewModel: PartnerViewModel) {
           modifier = Modifier.padding(24.dp),
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Text(
-            text = if (!isOtpSent) "Partner Login" else "Verify One-Time Password",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-          )
-          Text(
-            text = if (!isOtpSent)
-              "Enter registered mobile number to receive secure OTP"
-            else
-              "Enter 4-digit code sent to +91 $phone",
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(vertical = 8.dp)
-          )
+          if (isPinConfigured && isPinLoginMode) {
+            // Instant PIN Login Mode
+            Text(
+              text = "Quick PIN Unlock",
+              fontSize = 18.sp,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+              text = "Welcome back, ${profile.name}!\nEnter your 4-digit security PIN to unlock",
+              fontSize = 12.sp,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.padding(vertical = 8.dp)
+            )
 
-          if (!isOtpSent) {
             OutlinedTextField(
-              value = phone,
-              onValueChange = { if (it.length <= 10) viewModel.updatePhoneInput(it) },
-              label = { Text("Mobile Number") },
-              prefix = { Text("+91 ") },
+              value = pinInput,
+              onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) viewModel.updatePinInput(it) },
+              label = { Text("4-Digit Security PIN") },
               leadingIcon = {
-                Icon(Icons.Default.Phone, contentDescription = "Phone", tint = CleankrCoral)
+                Icon(Icons.Default.Lock, contentDescription = "PIN", tint = CleankrCoral)
               },
+              visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
               singleLine = true,
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
               modifier = Modifier
                 .fillMaxWidth()
-                .testTag("auth_phone_input"),
+                .testTag("auth_pin_input"),
               colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = CleankrCoral,
                 unfocusedBorderColor = MaterialTheme.colorScheme.outline
@@ -159,84 +162,158 @@ fun AuthScreen(viewModel: PartnerViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-              onClick = { viewModel.sendOtp() },
+              onClick = { viewModel.verifyPinLogin() },
               modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
-                .testTag("send_otp_button"),
+                .testTag("verify_pin_button"),
               colors = ButtonDefaults.buttonColors(containerColor = CleankrCoral),
               shape = RoundedCornerShape(12.dp)
             ) {
               Icon(Icons.Default.VerifiedUser, contentDescription = null, modifier = Modifier.size(18.dp))
               Spacer(modifier = Modifier.width(8.dp))
-              Text("Get Secure OTP", fontWeight = FontWeight.Bold)
+              Text("Unlock Partner Portal", fontWeight = FontWeight.Bold)
             }
-          } else {
-            OutlinedTextField(
-              value = otp,
-              onValueChange = { if (it.length <= 4) viewModel.updateOtpInput(it) },
-              label = { Text("4-Digit OTP") },
-              leadingIcon = {
-                Icon(Icons.Default.Lock, contentDescription = "OTP", tint = CleankrMagenta)
-              },
-              singleLine = true,
-              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-              modifier = Modifier
-                .fillMaxWidth()
-                .testTag("auth_otp_input"),
-              colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = CleankrMagenta,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-              )
-            )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Demo Helper helper pill
-            Surface(
-              shape = RoundedCornerShape(8.dp),
-              color = CleankrMagenta.copy(alpha = 0.1f),
-              modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+            TextButton(
+              onClick = { viewModel.togglePinLoginMode(false) },
+              modifier = Modifier.testTag("switch_to_otp_button")
             ) {
-              Text(
-                text = "Demo Partner OTP: 4821 (or 1234)",
-                fontSize = 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = CleankrMagenta,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(6.dp)
+              Text("Forgot PIN? Login with SMS OTP", fontSize = 12.sp, color = CleankrMagenta)
+            }
+          } else {
+            // SMS OTP Login Mode
+            Text(
+              text = if (!isOtpSent) "Partner Login" else "Verify One-Time Password",
+              fontSize = 18.sp,
+              fontWeight = FontWeight.Bold,
+              color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+              text = if (!isOtpSent)
+                "Enter registered mobile number to receive secure OTP"
+              else
+                "Enter 4-digit code sent to +91 $phone",
+              fontSize = 12.sp,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.padding(vertical = 8.dp)
+            )
+
+            if (!isOtpSent) {
+              OutlinedTextField(
+                value = phone,
+                onValueChange = { if (it.length <= 10) viewModel.updatePhoneInput(it) },
+                label = { Text("Mobile Number") },
+                prefix = { Text("+91 ") },
+                leadingIcon = {
+                  Icon(Icons.Default.Phone, contentDescription = "Phone", tint = CleankrCoral)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .testTag("auth_phone_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                  focusedBorderColor = CleankrCoral,
+                  unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
               )
-            }
 
-            Spacer(modifier = Modifier.height(12.dp))
+              Spacer(modifier = Modifier.height(16.dp))
 
-            Button(
-              onClick = { viewModel.verifyOtp() },
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp)
-                .testTag("verify_otp_button"),
-              colors = ButtonDefaults.buttonColors(containerColor = CleankrMagenta),
-              shape = RoundedCornerShape(12.dp)
-            ) {
-              Text("Verify & Continue", fontWeight = FontWeight.Bold)
-            }
-
-            Row(
-              modifier = Modifier.fillMaxWidth(),
-              horizontalArrangement = Arrangement.SpaceBetween,
-              verticalAlignment = Alignment.CenterVertically
-            ) {
-              TextButton(
+              Button(
                 onClick = { viewModel.sendOtp() },
-                modifier = Modifier.testTag("resend_otp_button")
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .height(50.dp)
+                  .testTag("send_otp_button"),
+                colors = ButtonDefaults.buttonColors(containerColor = CleankrCoral),
+                shape = RoundedCornerShape(12.dp)
               ) {
-                Text("Resend Code", fontSize = 12.sp, color = CleankrCoral)
+                Icon(Icons.Default.VerifiedUser, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Get Secure OTP", fontWeight = FontWeight.Bold)
               }
-              TextButton(
-                onClick = { viewModel.updateOtpInput("") }
+
+              if (isPinConfigured) {
+                Spacer(modifier = Modifier.height(8.dp))
+                TextButton(
+                  onClick = { viewModel.togglePinLoginMode(true) },
+                  modifier = Modifier.testTag("switch_to_pin_button")
+                ) {
+                  Text("Unlock with PIN instead", fontSize = 12.sp, color = CleankrViolet)
+                }
+              }
+            } else {
+              OutlinedTextField(
+                value = otp,
+                onValueChange = { if (it.length <= 4) viewModel.updateOtpInput(it) },
+                label = { Text("4-Digit OTP") },
+                leadingIcon = {
+                  Icon(Icons.Default.Lock, contentDescription = "OTP", tint = CleankrMagenta)
+                },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .testTag("auth_otp_input"),
+                colors = OutlinedTextFieldDefaults.colors(
+                  focusedBorderColor = CleankrMagenta,
+                  unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+              )
+
+              Spacer(modifier = Modifier.height(8.dp))
+
+              // Demo Helper helper pill
+              Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = CleankrMagenta.copy(alpha = 0.1f),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
               ) {
-                Text("Change Mobile", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                  text = "Demo Partner OTP: 4821 (or 1234)",
+                  fontSize = 11.sp,
+                  fontWeight = FontWeight.SemiBold,
+                  color = CleankrMagenta,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.padding(6.dp)
+                )
+              }
+
+              Spacer(modifier = Modifier.height(12.dp))
+
+              Button(
+                onClick = { viewModel.verifyOtp() },
+                modifier = Modifier
+                  .fillMaxWidth()
+                  .height(50.dp)
+                  .testTag("verify_otp_button"),
+                colors = ButtonDefaults.buttonColors(containerColor = CleankrMagenta),
+                shape = RoundedCornerShape(12.dp)
+              ) {
+                Text("Verify & Continue", fontWeight = FontWeight.Bold)
+              }
+
+              Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+              ) {
+                TextButton(
+                  onClick = { viewModel.sendOtp() },
+                  modifier = Modifier.testTag("resend_otp_button")
+                ) {
+                  Text("Resend Code", fontSize = 12.sp, color = CleankrCoral)
+                }
+                TextButton(
+                  onClick = { viewModel.updateOtpInput("") }
+                ) {
+                  Text("Change Mobile", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
               }
             }
           }

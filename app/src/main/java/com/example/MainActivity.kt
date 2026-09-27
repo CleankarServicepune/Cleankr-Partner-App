@@ -48,6 +48,8 @@ import com.example.ui.screens.PrivacyLegalScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.SecurityCenterScreen
 import com.example.ui.screens.SettingsScreen
+import com.example.ui.screens.MyHubScreen
+import com.example.ui.screens.SetPinScreen
 import com.example.ui.screens.TargetScreen
 import com.example.ui.theme.CleankrPartnerTheme
 import kotlinx.coroutines.launch
@@ -150,6 +152,8 @@ fun CleankrPartnerApp(viewModel: PartnerViewModel) {
             AppScreen.PRIVACY_POLICY -> "Privacy Policy"
             AppScreen.PRIVACY_LEGAL -> "Privacy & Legal"
             AppScreen.ACCOUNT_DELETION -> "Delete Account"
+            AppScreen.SET_PIN -> "Security PIN"
+            AppScreen.MY_HUB -> "My Operations Hub"
             else -> null
           },
           onOpenDrawer = {
@@ -228,6 +232,8 @@ fun CleankrPartnerApp(viewModel: PartnerViewModel) {
             viewModel = viewModel,
             onBack = { viewModel.navigateTo(AppScreen.PROFILE) }
           )
+          AppScreen.SET_PIN -> SetPinScreen(viewModel = viewModel)
+          AppScreen.MY_HUB -> MyHubScreen(viewModel = viewModel)
         }
       }
     }

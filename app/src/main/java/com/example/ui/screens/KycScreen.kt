@@ -58,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.KycStatus
 import com.example.ui.PartnerViewModel
+import com.example.ui.theme.*
 import com.example.ui.theme.CleankrCoral
 import com.example.ui.theme.CleankrCyan
 import com.example.ui.theme.CleankrGreen
@@ -76,6 +77,9 @@ fun KycScreen(
   var bankAccountInput by remember { mutableStateOf("4921") }
   var ifscInput by remember { mutableStateOf("HDFC0001243") }
   var upiInput by remember { mutableStateOf("sunil.clean@upi") }
+
+  var nsdcCertInput by remember { mutableStateOf(profile.nsdcDetails.certificateNumber) }
+  var nsdcDetails by remember { mutableStateOf(profile.nsdcDetails) }
 
   var capturedDocBitmap by remember { mutableStateOf<Bitmap?>(null) }
   val docCameraLauncher = rememberLauncherForActivityResult(
@@ -191,15 +195,33 @@ fun KycScreen(
         }
       }
 
-      // Bank & Payout Details
+      // Bank & Payout Details (BankAccountDetails)
       Card(
         shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         modifier = Modifier.fillMaxWidth()
       ) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          Text("Payout & Bank Details", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-          Text("Earnings are automatically transferred to this account upon withdrawal request.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Text("Payout & Bank Details", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            Surface(
+              shape = RoundedCornerShape(6.dp),
+              color = CleankrGreen.copy(alpha = 0.12f)
+            ) {
+              Text(
+                text = "Account Verified ✓",
+                color = CleankrGreen,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+              )
+            }
+          }
+          Text("Official bank account registered for direct withdrawal settlement and daily partner earnings.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
           OutlinedTextField(
             value = bankAccountInput,
@@ -222,6 +244,75 @@ fun KycScreen(
             label = { Text("UPI Virtual Payment Address (VPA)") },
             modifier = Modifier.fillMaxWidth()
           )
+        }
+      }
+
+      // NSDC Certificate Validation Card
+      Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        modifier = Modifier.fillMaxWidth()
+      ) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+          ) {
+            Column {
+              Text("NSDC / Skill India Certification", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+              Text("National Skill Development Corporation", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = CleankrViolet)
+          }
+
+          Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = when (nsdcDetails.verificationStatus) {
+              com.example.data.model.NsdcVerificationStatus.FORMAT_VALID_PENDING_GOVT_SYNC -> CleankrAmber.copy(alpha = 0.12f)
+              com.example.data.model.NsdcVerificationStatus.VERIFIED_OFFICIAL -> CleankrGreen.copy(alpha = 0.12f)
+              else -> MaterialTheme.colorScheme.surfaceVariant
+            },
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              Text(
+                text = "Status: ${nsdcDetails.verificationStatus.name.replace("_", " ")}",
+                fontWeight = FontWeight.Bold,
+                fontSize = 11.sp,
+                color = when (nsdcDetails.verificationStatus) {
+                  com.example.data.model.NsdcVerificationStatus.FORMAT_VALID_PENDING_GOVT_SYNC -> Color(0xFF8A5B00)
+                  com.example.data.model.NsdcVerificationStatus.VERIFIED_OFFICIAL -> CleankrGreen
+                  else -> Color.Gray
+                }
+              )
+              Text(
+                text = nsdcDetails.officialVerificationRemarks ?: "Enter certificate number to validate against Skill India standards.",
+                fontSize = 10.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+              )
+            }
+          }
+
+          OutlinedTextField(
+            value = nsdcCertInput,
+            onValueChange = { nsdcCertInput = it },
+            label = { Text("NSDC Certificate Number") },
+            placeholder = { Text("e.g. NSDC-HKS-2024-9412") },
+            modifier = Modifier.fillMaxWidth()
+          )
+
+          Button(
+            onClick = {
+              val res = viewModel.validateNsdcCertificate(nsdcCertInput)
+              nsdcDetails = res
+            },
+            colors = ButtonDefaults.buttonColors(containerColor = CleankrViolet),
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Text("Validate NSDC Certificate Format", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+          }
         }
       }
 

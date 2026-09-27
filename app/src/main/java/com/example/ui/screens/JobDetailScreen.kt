@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -141,6 +142,10 @@ fun JobDetailScreen(
 
   var showRescheduleDialog by remember { mutableStateOf(false) }
   var rescheduleDate by remember { mutableStateOf("Tomorrow 10:00 AM") }
+
+  var showNonResponseDialog by remember { mutableStateOf(false) }
+  var waitingTimeMinutes by remember { mutableStateOf("15") }
+  var callsPlacedCount by remember { mutableStateOf("3") }
 
   val scrollState = rememberScrollState()
 
@@ -610,26 +615,41 @@ fun JobDetailScreen(
         }
       }
 
-      // 6. Reschedule / Cancellation options
+      // 6. Reschedule / Cancellation / Customer Non-Response options
       if (job.status != JobStatus.COMPLETED && job.status != JobStatus.CANCELLED) {
-        Row(
-          modifier = Modifier.fillMaxWidth(),
-          horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-          OutlinedButton(
-            onClick = { showRescheduleDialog = true },
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.weight(1f).testTag("reschedule_job_button")
-          ) {
-            Text("Reschedule", fontSize = 12.sp)
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          if (job.status == JobStatus.ARRIVED || job.status == JobStatus.ON_THE_WAY) {
+            Button(
+              onClick = { showNonResponseDialog = true },
+              colors = ButtonDefaults.buttonColors(containerColor = CleankrAmber.copy(alpha = 0.15f), contentColor = Color(0xFF8A5B00)),
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.fillMaxWidth().testTag("customer_non_response_button")
+            ) {
+              Icon(Icons.Default.Warning, contentDescription = null, modifier = Modifier.size(16.dp))
+              Spacer(modifier = Modifier.width(6.dp))
+              Text("Customer Not Responding? Report & Claim ₹100 Compensation", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            }
           }
-          OutlinedButton(
-            onClick = { showCancelDialog = true },
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = CleankrRed),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.weight(1f).testTag("cancel_job_button")
+
+          Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
           ) {
-            Text("Cancel Job", fontSize = 12.sp)
+            OutlinedButton(
+              onClick = { showRescheduleDialog = true },
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.weight(1f).testTag("reschedule_job_button")
+            ) {
+              Text("Reschedule", fontSize = 12.sp)
+            }
+            OutlinedButton(
+              onClick = { showCancelDialog = true },
+              colors = ButtonDefaults.outlinedButtonColors(contentColor = CleankrRed),
+              shape = RoundedCornerShape(8.dp),
+              modifier = Modifier.weight(1f).testTag("cancel_job_button")
+            ) {
+              Text("Cancel Job", fontSize = 12.sp)
+            }
           }
         }
       }
@@ -779,4 +799,69 @@ fun JobDetailScreen(
       }
     )
   }
+
+  // Customer Non-Response & ₹100 Compensation Claim Dialog
+  if (showNonResponseDialog) {
+    AlertDialog(
+      onDismissRequest = { showNonResponseDialog = false },
+      title = { Text("Customer Non-Response Claim") },
+      text = {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+          Surface(
+            shape = RoundedCornerShape(8.dp),
+            color = CleankrAmber.copy(alpha = 0.15f),
+            modifier = Modifier.fillMaxWidth()
+          ) {
+            Row(modifier = Modifier.padding(10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+              Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFF8A5B00), modifier = Modifier.size(20.dp))
+              Text(
+                text = "Cleankr Partner Protection Policy: If customer does not respond after reaching location and waiting 15+ minutes, partner receives ₹100 convenience compensation upon Operations verification.",
+                fontSize = 11.sp,
+                color = Color(0xFF5A3B00),
+                lineHeight = 16.sp
+              )
+            }
+          }
+
+          Text("Doorstep Verification Checklist:", fontWeight = FontWeight.SemiBold, fontSize = 12.sp)
+          Text("• Doorbell rung and minimum 3 calls placed via Masked Relay", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Text("• Partner GPS verified at customer premises", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+          Text("• Doorstep / House number photo attached via camera", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+          OutlinedTextField(
+            value = waitingTimeMinutes,
+            onValueChange = { waitingTimeMinutes = it },
+            label = { Text("Time Waited at Doorstep (Minutes)") },
+            modifier = Modifier.fillMaxWidth()
+          )
+
+          OutlinedTextField(
+            value = callsPlacedCount,
+            onValueChange = { callsPlacedCount = it },
+            label = { Text("Total Calls Placed") },
+            modifier = Modifier.fillMaxWidth()
+          )
+        }
+      },
+      confirmButton = {
+        Button(
+          onClick = {
+            val waitMins = waitingTimeMinutes.toIntOrNull() ?: 15
+            val calls = callsPlacedCount.toIntOrNull() ?: 3
+            viewModel.reportCustomerNonResponse(job, waitMins, calls)
+            showNonResponseDialog = false
+          },
+          colors = ButtonDefaults.buttonColors(containerColor = CleankrCoral)
+        ) {
+          Text("Submit ₹100 Claim & Log Incident")
+        }
+      },
+      dismissButton = {
+        TextButton(onClick = { showNonResponseDialog = false }) {
+          Text("Close")
+        }
+      }
+    )
+  }
 }
+

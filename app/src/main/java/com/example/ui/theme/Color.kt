@@ -3,12 +3,12 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Cleankr Brand Colors matching official monogram (Magenta, Violet & Sunset Coral)
-val CleankrMagenta = Color(0xFFD81B60)
-val CleankrMagentaDark = Color(0xFFAD1457)
-val CleankrViolet = Color(0xFF8E24AA)
-val CleankrCoral = Color(0xFFFF6E40)
+val CleankrCoral = Color(0xFFFF5A36) // Brand Coral #FF5A36
+val CleankrMagenta = Color(0xFFD81B60) // Brand Magenta #D81B60
+val CleankrViolet = Color(0xFF6A1B9A) // Brand Violet #6A1B9A
+val CleankrPeach = Color(0xFFFFA07A) // Brand Peach #FFA07A
 val CleankrCoralDark = Color(0xFFE64A19)
-val CleankrPeach = Color(0xFFFF8A65)
+val CleankrMagentaDark = Color(0xFFAD1457)
 
 // Status Colors
 val CleankrGreen = Color(0xFF00C853)

@@ -117,6 +117,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // 11. Hubs: Cleankr Operations Depots & Equipment Centers (Admin managed)
+    match /hubs/{hubId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
     // Default deny for all other collections
     match /{document=**} {
       allow read, write: if false;

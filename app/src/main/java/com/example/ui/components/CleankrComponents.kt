@@ -24,8 +24,12 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsActive
@@ -345,15 +349,15 @@ fun StatusBadge(
   status: JobStatus,
   modifier: Modifier = Modifier
 ) {
-  val (bgColor, textColor, label) = when (status) {
-    JobStatus.ASSIGNED -> Triple(CleankrAmberContainer, CleankrAmber, "NEW ASSIGNED")
-    JobStatus.ACCEPTED -> Triple(Color(0xFFE1F5FE), Color(0xFF0288D1), "ACCEPTED")
-    JobStatus.ON_THE_WAY -> Triple(Color(0xFFEDE7F6), CleankrViolet, "ON THE WAY")
-    JobStatus.ARRIVED -> Triple(Color(0xFFFFF3E0), CleankrCoralDark, "ARRIVED ON SITE")
-    JobStatus.STARTED -> Triple(Color(0xFFFCE4EC), CleankrMagenta, "IN PROGRESS")
-    JobStatus.COMPLETED -> Triple(CleankrGreenContainer, CleankrGreen, "COMPLETED")
-    JobStatus.CANCELLED -> Triple(CleankrRedContainer, CleankrRed, "CANCELLED")
-    JobStatus.RESCHEDULED -> Triple(Color(0xFFECEFF1), Color(0xFF546E7A), "RESCHEDULED")
+  val (bgColor, textColor, label, icon) = when (status) {
+    JobStatus.ASSIGNED -> androidx.compose.ui.util.fastCbrt(0f).run { Quadruple(CleankrAmberContainer, CleankrAmber, "NEW ASSIGNED", Icons.Default.Schedule) }
+    JobStatus.ACCEPTED -> Quadruple(Color(0xFFE1F5FE), Color(0xFF0288D1), "ACCEPTED", Icons.Default.CheckCircle)
+    JobStatus.ON_THE_WAY -> Quadruple(Color(0xFFEDE7F6), CleankrViolet, "ON THE WAY", Icons.Default.Directions)
+    JobStatus.ARRIVED -> Quadruple(Color(0xFFFFF3E0), CleankrCoralDark, "ARRIVED ON SITE", Icons.Default.LocationOn)
+    JobStatus.STARTED -> Quadruple(Color(0xFFFCE4EC), CleankrMagenta, "IN PROGRESS", Icons.Default.Schedule)
+    JobStatus.COMPLETED -> Quadruple(CleankrGreenContainer, CleankrGreen, "COMPLETED", Icons.Default.CheckCircle)
+    JobStatus.CANCELLED -> Quadruple(CleankrRedContainer, CleankrRed, "CANCELLED", Icons.Default.Cancel)
+    JobStatus.RESCHEDULED -> Quadruple(Color(0xFFECEFF1), Color(0xFF546E7A), "RESCHEDULED", Icons.Default.CalendarMonth)
   }
 
   Surface(
@@ -361,15 +365,28 @@ fun StatusBadge(
     color = bgColor,
     modifier = modifier.testTag("status_badge_${status.name.lowercase()}")
   ) {
-    Text(
-      text = label,
-      color = textColor,
-      fontSize = 11.sp,
-      fontWeight = FontWeight.Bold,
-      modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-    )
+    Row(
+      modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+      Icon(
+        imageVector = icon,
+        contentDescription = null,
+        tint = textColor,
+        modifier = Modifier.size(12.dp)
+      )
+      Text(
+        text = label,
+        color = textColor,
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold
+      )
+    }
   }
 }
+
+private data class Quadruple<A, B, C, D>(val first: A, val second: B, val third: C, val fourth: D)
 
 /**
  * Bottom Navigation Bar with 5 tabs matching Urban Company Partner:

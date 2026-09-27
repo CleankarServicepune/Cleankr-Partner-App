@@ -31,6 +31,7 @@ object CleankrFirebaseConfig {
     const val EARNINGS = "earnings"
     const val SUPPORT_TICKETS = "support_tickets"
     const val AUDIT_LOGS = "audit_logs"
+    const val HUBS = "hubs"
   }
 
   // Common Entity Fields
