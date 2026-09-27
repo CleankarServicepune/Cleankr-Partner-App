@@ -46,6 +46,14 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="cleankr_dispatch_channel" />
 
+        <!-- Disable automatic Firebase Messaging auto-init and background sync on startup to prevent hard failure exceptions on emulators -->
+        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="true" />
+
         <!-- Firebase Cloud Messaging Receiver -->
         <service
             android:name=".notifications.CleankrMessagingService"

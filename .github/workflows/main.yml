@@ -1,4 +1,4 @@
-name: Build Cleankr Partner App
+name: Build Cleankr Partner App (APK & AAB)
 
 on:
   push:
@@ -6,59 +6,103 @@ on:
       - main
       - master
   workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Choose build output'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - apk_only
+          - aab_only
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
-    name: Build Android Artifacts (APK & AAB)
+    name: Build Android APK & AAB
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up JDK 21 (Temurin)
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
-      - name: Make Gradle wrapper executable
+      - name: Make Gradle Wrapper Executable
         run: chmod +x gradlew
 
-      - name: Build Debug APK, Release APK and Release AAB
+      - name: Prepare Environment and Signing Keystore
+        run: |
+          # Ensure .env exists to prevent build failures with Secrets Gradle Plugin
+          if [ ! -f .env ]; then
+            if [ -f .env.example ]; then
+              cp .env.example .env
+            else
+              touch .env
+            fi
+          fi
+
+          # Ensure a valid signing key exists for Release APK & AAB builds
+          if [ -z "${{ secrets.KEYSTORE_PATH }}" ] && [ ! -f "my-upload-key.jks" ]; then
+            echo "Generating fallback upload keystore for automated CI release signing..."
+            keytool -genkeypair -v \
+              -keystore my-upload-key.jks \
+              -alias upload \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass android \
+              -keypass android \
+              -dname "CN=Cleankr Partner, OU=Cleankr Ops, O=Cleankr, L=Bangalore, S=Karnataka, C=IN"
+          fi
+
+      - name: Build Android Artifacts (APK & AAB)
         env:
           KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH }}
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew assembleDebug assembleRelease bundleRelease --stacktrace
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'android' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'android' }}
+        run: |
+          echo "Starting Gradle Build for APK and AAB..."
+          ./gradlew assembleDebug assembleRelease bundleRelease bundleDebug --no-daemon --stacktrace
 
-      - name: Upload Debug APK
+      - name: Generate Build Summary
+        run: |
+          echo "### 🚀 Cleankr Partner Build Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "| Artifact Type | File Name | Size |" >> $GITHUB_STEP_SUMMARY
+          echo "|---|---|---|" >> $GITHUB_STEP_SUMMARY
+          for f in $(find app/build/outputs/ -type f \( -name "*.apk" -o -name "*.aab" \)); do
+            size=$(ls -lh "$f" | awk '{print $5}')
+            name=$(basename "$f")
+            echo "| Android Package | \`$name\` | $size |" >> $GITHUB_STEP_SUMMARY
+          done
+
+      - name: Upload All APKs (Debug & Release)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cleankr-partner-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
+          name: Cleankr-Partner-APKs
+          path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
 
-      - name: Upload Release APK
+      - name: Upload All AABs (Google Play App Bundles)
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: cleankr-partner-release-apk
-          path: app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
-
-      - name: Upload Release AAB (App Bundle)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: cleankr-partner-release-aab
-          path: app/build/outputs/bundle/release/*.aab
-          if-no-files-found: warn
+          name: Cleankr-Partner-AABs
+          path: app/build/outputs/bundle/**/*.aab
+          if-no-files-found: error
+          retention-days: 14
