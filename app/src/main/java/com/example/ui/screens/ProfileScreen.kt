@@ -1,8 +1,7 @@
 package com.example.ui.screens
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,275 +12,154 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.HelpOutline
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.Security
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
-import com.example.ui.components.CleankrMonogram
-import com.example.ui.theme.CleankrAmber
-import com.example.ui.theme.CleankrCoral
-import com.example.ui.theme.CleankrCyan
-import com.example.ui.theme.CleankrGreen
-import com.example.ui.theme.CleankrMagenta
-import com.example.ui.theme.CleankrPeach
-import com.example.ui.theme.CleankrRed
-import com.example.ui.theme.CleankrViolet
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(viewModel: PartnerViewModel) {
-  val profile by viewModel.profile.collectAsState()
-  val earnings by viewModel.earnings.collectAsState()
-
-  LazyColumn(
-    modifier = Modifier
-      .fillMaxSize()
-      .background(MaterialTheme.colorScheme.background)
-      .padding(horizontal = 16.dp),
-    verticalArrangement = Arrangement.spacedBy(14.dp)
-  ) {
-    item {
-      Spacer(modifier = Modifier.height(8.dp))
-      // Profile Hero Card
-      Card(
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(
-          modifier = Modifier.padding(20.dp),
-          horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-          Box(
-            modifier = Modifier
-              .size(72.dp)
-              .clip(CircleShape)
-              .background(CleankrMagenta.copy(alpha = 0.15f))
-              .border(2.dp, CleankrMagenta, CircleShape),
-            contentAlignment = Alignment.Center
-          ) {
-            Icon(Icons.Default.Person, contentDescription = null, tint = CleankrMagenta, modifier = Modifier.size(40.dp))
-          }
-
-          Spacer(modifier = Modifier.height(10.dp))
-
+  Scaffold(
+    topBar = {
+      TopAppBar(
+        title = {
           Text(
-            text = profile.name,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
+            text = "Partner Profile",
+            fontWeight = FontWeight.Black,
+            fontStyle = FontStyle.Italic
           )
-          Text(
-            text = "Partner ID: ${profile.id} • ${profile.tier}",
-            fontSize = 12.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-          )
-
-          Spacer(modifier = Modifier.height(8.dp))
-
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)
-          ) {
-            Icon(Icons.Default.Star, contentDescription = null, tint = CleankrAmber, modifier = Modifier.size(16.dp))
-            Text(
-              text = "${profile.rating} Rating",
-              fontWeight = FontWeight.Bold,
-              fontSize = 13.sp
-            )
-            Text(
-              text = "• ${profile.totalJobsCompleted} Jobs Completed",
-              fontSize = 12.sp,
-              color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+        },
+        navigationIcon = {
+          IconButton(onClick = { viewModel.navigateTo(AppScreen.HOME) }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
           }
-        }
-      }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
+      )
     }
-
-    // KYC & Verification Status Card
-    item {
-      Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier
-          .fillMaxWidth()
-          .clickable { viewModel.navigateTo(AppScreen.KYC) }
-          .testTag("profile_kyc_card")
-      ) {
-        Row(
-          modifier = Modifier.padding(16.dp),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically
+  ) { padding ->
+    LazyColumn(
+      modifier = Modifier
+        .fillMaxSize()
+        .background(Color(0xFFFBFBFB))
+        .padding(padding)
+        .padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+      item {
+        Card(
+          shape = RoundedCornerShape(18.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White),
+          border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+          modifier = Modifier.fillMaxWidth()
         ) {
-          Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+          Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
           ) {
             Box(
-              modifier = Modifier.size(40.dp).clip(CircleShape).background(CleankrGreen.copy(alpha = 0.15f)),
+              modifier = Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFEDE7F6)),
               contentAlignment = Alignment.Center
             ) {
-              Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = CleankrGreen, modifier = Modifier.size(22.dp))
+              Text(
+                text = "SU",
+                fontWeight = FontWeight.Black,
+                fontSize = 24.sp,
+                color = Color(0xFF4A148C)
+              )
             }
-            Column {
-              Text("KYC & Bank Verification", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-              Text("Aadhaar, PAN & Bank Account Verified", fontSize = 11.sp, color = CleankrGreen)
-              Text("NSDC / Skill India: ${profile.nsdcDetails.verificationStatus.name.replace("_", " ")}", fontSize = 10.sp, color = CleankrViolet, fontWeight = FontWeight.Medium)
+
+            Text(
+              text = "Sunil Sharma",
+              fontWeight = FontWeight.Black,
+              fontSize = 20.sp,
+              color = Color(0xFF1E1E1E)
+            )
+
+            Text(
+              text = "+91 98*** **412",
+              fontSize = 14.sp,
+              color = Color(0xFF616161)
+            )
+
+            Surface(
+              shape = RoundedCornerShape(12.dp),
+              color = Color(0xFFFFF8E1),
+              modifier = Modifier.padding(top = 4.dp)
+            ) {
+              Text(
+                text = "★ 4.92 Star Partner Rating",
+                color = Color(0xFFF57F17),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+              )
             }
           }
-          Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(16.dp), tint = Color.Gray)
         }
       }
-    }
 
-    // Navigation Menu Options
-    item {
-      Text("Settings & Compliance", fontWeight = FontWeight.Bold, fontSize = 15.sp)
-    }
-
-    item {
-      Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column {
-          ProfileMenuItem(
-            icon = Icons.Default.Security,
-            iconTint = CleankrCyan,
-            title = "Cyber Security & Anti-Theft",
-            subtitle = "Integrity scan, app lock & audit trail",
-            onClick = { viewModel.navigateTo(AppScreen.SECURITY_CENTER) }
-          )
-
-          ProfileMenuItem(
-            icon = Icons.Default.Settings,
-            iconTint = CleankrCoral,
-            title = "App Settings & Theme",
-            subtitle = "Language, theme mode & notifications",
-            onClick = { viewModel.navigateTo(AppScreen.SETTINGS) }
-          )
-
-          ProfileMenuItem(
-            icon = Icons.Default.HelpOutline,
-            iconTint = CleankrGreen,
-            title = "Help & Support Desk",
-            subtitle = "24/7 helpline, chat & safety SOS",
-            onClick = { viewModel.navigateTo(AppScreen.HELP_SUPPORT) }
-          )
-
-          ProfileMenuItem(
-            icon = Icons.Default.Policy,
-            iconTint = CleankrPeach,
-            title = "Privacy & Legal",
-            subtitle = "Privacy policy, terms, refunds & account deletion",
-            onClick = { viewModel.navigateTo(AppScreen.PRIVACY_LEGAL) }
-          )
-
-          ProfileMenuItem(
-            icon = Icons.Default.Policy,
-            iconTint = CleankrPeach,
-            title = "Privacy Policy (Sept 3, 2026)",
-            subtitle = "Data usage, telephony masking & no-sale policy",
-            onClick = { viewModel.navigateTo(AppScreen.PRIVACY_POLICY) }
-          )
-
-          ProfileMenuItem(
-            icon = Icons.Default.DeleteForever,
-            iconTint = CleankrRed,
-            title = "Account & Data Deletion",
-            subtitle = "Exercise GDPR/DPDP right to be forgotten",
-            onClick = { viewModel.navigateTo(AppScreen.ACCOUNT_DELETION) }
-          )
+      item {
+        Card(
+          shape = RoundedCornerShape(16.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White),
+          border = BorderStroke(1.dp, Color(0xFFEBEBEB)),
+          modifier = Modifier.fillMaxWidth()
+        ) {
+          Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+              text = "Partner Information",
+              fontWeight = FontWeight.Black,
+              fontSize = 16.sp,
+              fontStyle = FontStyle.Italic
+            )
+            ProfileRow(label = "Partner ID", value = "CK-PT-98412")
+            ProfileRow(label = "City Hub", value = "Andheri West, Mumbai (MH-02)")
+            ProfileRow(label = "Joined", value = "14 January 2025")
+            ProfileRow(label = "Primary Skill", value = "Full Home & Villa Deep Cleaning")
+            ProfileRow(label = "NSDC Skill ID", value = "NSDC-IND-2025-4819")
+          }
         }
       }
-    }
-
-    // Logout Button
-    item {
-      OutlinedButton(
-        onClick = { viewModel.logout() },
-        colors = ButtonDefaults.outlinedButtonColors(contentColor = CleankrRed),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("profile_logout_button")
-      ) {
-        Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(modifier = Modifier.width(8.dp))
-        Text("Log Out of Partner Account", fontWeight = FontWeight.Bold)
-      }
-    }
-
-    item {
-      Spacer(modifier = Modifier.height(24.dp))
     }
   }
 }
 
 @Composable
-fun ProfileMenuItem(
-  icon: androidx.compose.ui.graphics.vector.ImageVector,
-  iconTint: Color,
-  title: String,
-  subtitle: String,
-  onClick: () -> Unit
-) {
+fun ProfileRow(label: String, value: String) {
   Row(
-    modifier = Modifier
-      .fillMaxWidth()
-      .clickable { onClick() }
-      .padding(horizontal = 16.dp, vertical = 14.dp),
-    horizontalArrangement = Arrangement.SpaceBetween,
-    verticalAlignment = Alignment.CenterVertically
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween
   ) {
-    Row(
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-      modifier = Modifier.weight(1f)
-    ) {
-      Box(
-        modifier = Modifier.size(36.dp).clip(CircleShape).background(iconTint.copy(alpha = 0.15f)),
-        contentAlignment = Alignment.Center
-      ) {
-        Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(18.dp))
-      }
-      Column {
-        Text(title, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
-        Text(subtitle, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-      }
-    }
-    Icon(Icons.Default.ArrowForwardIos, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.Gray)
+    Text(text = label, color = Color(0xFF757575), fontSize = 13.sp)
+    Text(text = value, color = Color(0xFF212121), fontWeight = FontWeight.Bold, fontSize = 13.sp)
   }
 }

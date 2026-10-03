@@ -1,11 +1,7 @@
 package com.example.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +23,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CalendarMonth
-import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.EventBusy
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.ViewDay
-import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -50,12 +39,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -84,10 +70,8 @@ import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
 import com.example.ui.components.CleankrHelpFloatingButton
 import com.example.ui.components.SlotToggleRow
-import com.example.ui.theme.CleankrAmber
 import com.example.ui.theme.CleankrCoral
 import com.example.ui.theme.CleankrGreen
-import com.example.ui.theme.CleankrMagenta
 import com.example.ui.theme.CleankrRed
 import com.example.ui.theme.CleankrViolet
 import java.text.SimpleDateFormat
@@ -95,12 +79,12 @@ import java.util.Calendar
 import java.util.Locale
 
 data class CalendarDayItem(
-  val dateStr: String, // "2026-09-29"
-  val dayOfWeekShort: String, // "TUE"
-  val dayNumber: Int, // 29
-  val monthShort: String, // "Sep"
-  val dayNameHindi: String, // "Mangalvaar"
-  val dayNameEnglish: String // "Tuesday"
+  val dateStr: String,
+  val dayOfWeekShort: String,
+  val dayNumber: Int,
+  val monthShort: String,
+  val dayNameHindi: String,
+  val dayNameEnglish: String
 )
 
 private fun getOrdinal(day: Int): String {
@@ -113,13 +97,6 @@ private fun getOrdinal(day: Int): String {
   }
 }
 
-/**
- * CalendarScreen with exact Urban Company Partner slot availability interface:
- * 1. Horizontal date selector strip (SUN 27 ✓, MON 28 ✓, TUE 29 ✓, WED 30 ✓, etc.)
- * 2. Big day header ("Mangalvaar, Sep 29th") with dynamic "11 hours marked available" summary
- * 3. Individual slot cards with peak hour indicators (⚡ PEAK HOUR SLOT) and switch controls
- * 4. Month view toggle for leave management and full-month inspection
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CalendarScreen(viewModel: PartnerViewModel) {
@@ -127,7 +104,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
   val leaves by viewModel.leaves.collectAsState()
   val schedules by viewModel.schedules.collectAsState()
 
-  // 14-day window around September 24 - October 7, 2026
   val daysList = remember {
     val list = mutableListOf<CalendarDayItem>()
     val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
@@ -181,7 +157,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
     list
   }
 
-  // Default selected date: September 29, 2026 (matching the user's UC screenshot)
   var selectedDateStr by remember { mutableStateOf("2026-09-29") }
   val selectedDayItem = daysList.find { it.dateStr == selectedDateStr } ?: daysList.firstOrNull() ?: CalendarDayItem(
     "2026-09-29", "TUE", 29, "Sep", "Mangalvaar", "Tuesday"
@@ -191,7 +166,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
   var showAddLeaveModal by remember { mutableStateOf(false) }
   var customLeaveReason by remember { mutableStateOf("Personal / Family Day Off") }
 
-  // Current day schedule and availability
   val isSelectedDayLeave = leaves.any { it.date == selectedDateStr }
   val currentDaySchedule = schedules[selectedDateStr] ?: PartnerDaySchedule(
     date = selectedDateStr,
@@ -201,7 +175,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
 
   val totalAvailableHours = if (isSelectedDayLeave) 0 else currentDaySchedule.totalAvailableHours
 
-  // Jobs on this date
   val jobsForSelectedDate = allJobs.filter { job ->
     job.date == selectedDateStr ||
       (selectedDayItem.dayNumber == 24 && (job.date.endsWith("-24") || job.timeSlot.contains("9:00 AM"))) ||
@@ -210,13 +183,14 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
 
   val dateRowListState = rememberLazyListState()
 
-  // Scroll to Tuesday Sep 29 on first composition
   LaunchedEffect(Unit) {
     val initialIdx = daysList.indexOfFirst { it.dateStr == "2026-09-29" }
     if (initialIdx >= 0) {
       dateRowListState.scrollToItem(maxOf(0, initialIdx - 1))
     }
   }
+
+  var showHelpDialog by remember { mutableStateOf(false) }
 
   Scaffold(
     topBar = {
@@ -234,7 +208,7 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
               if (showMonthView) {
                 showMonthView = false
               } else {
-                viewModel.navigateTo(AppScreen.DASHBOARD)
+                viewModel.navigateTo(AppScreen.HOME)
               }
             },
             modifier = Modifier.testTag("calendar_back_button")
@@ -247,7 +221,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
           }
         },
         actions = {
-          // Toggle between UC Slot View and Full Month Calendar
           IconButton(onClick = { showMonthView = !showMonthView }) {
             Icon(
               imageVector = if (showMonthView) Icons.Default.ViewDay else Icons.Default.CalendarMonth,
@@ -271,12 +244,11 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
     },
     floatingActionButton = {
       CleankrHelpFloatingButton(
-        onHelpClick = { viewModel.navigateTo(AppScreen.HELP_SUPPORT) }
+        onHelpClick = { showHelpDialog = true }
       )
     }
   ) { paddingValues ->
     if (showMonthView) {
-      // Month grid view for leave overview
       FullMonthCalendarContent(
         paddingValues = paddingValues,
         viewModel = viewModel,
@@ -288,15 +260,13 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
         }
       )
     } else {
-      // Urban Company Exact Slot View
       LazyColumn(
         modifier = Modifier
           .fillMaxSize()
-          .background(Color(0xFFF8F9FA)) // Crisp off-white matching UC background
+          .background(Color(0xFFF8F9FA))
           .padding(paddingValues),
         contentPadding = PaddingValues(bottom = 80.dp)
       ) {
-        // 1. Horizontal Date Strip (SUN 27, MON 28, TUE 29, WED 30...)
         item {
           Surface(
             color = MaterialTheme.colorScheme.surface,
@@ -371,7 +341,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
           }
         }
 
-        // 2. Day Title & Summary ("Mangalvaar, Sep 29th" & "11 hours marked available")
         item {
           Column(
             modifier = Modifier
@@ -400,7 +369,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
           }
         }
 
-        // 3. Exact Urban Company Slot List
         item {
           Column(
             modifier = Modifier
@@ -420,7 +388,6 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
           }
         }
 
-        // 4. Quick Day-Off & Leave Controls
         item {
           Spacer(modifier = Modifier.height(14.dp))
           Card(
@@ -473,53 +440,9 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
           }
         }
 
-        // 5. Booked Jobs on this Date (if any)
-        if (jobsForSelectedDate.isNotEmpty()) {
-          item {
-            Spacer(modifier = Modifier.height(10.dp))
-            Column(
-              modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-              verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-              Text(
-                text = "Booked Jobs (${jobsForSelectedDate.size})",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-              )
-
-              jobsForSelectedDate.forEach { job ->
-                Card(
-                  shape = RoundedCornerShape(12.dp),
-                  colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                  border = BorderStroke(1.dp, CleankrCoral.copy(alpha = 0.3f)),
-                  modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { viewModel.navigateTo(AppScreen.JOB_DETAILS, job.id) }
-                ) {
-                  Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                  ) {
-                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                      Text(job.serviceTitle, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                      Text("${job.timeSlot} • ${job.customerName}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                      Text(job.address, fontSize = 11.sp, color = Color.Gray, maxLines = 1)
-                    }
-                    Text("₹${job.estimatedEarnings.toInt()}", fontWeight = FontWeight.Black, fontSize = 16.sp, color = CleankrGreen)
-                  }
-                }
-              }
-            }
-          }
-        }
       }
     }
 
-    // Leave Application Dialog
     if (showAddLeaveModal) {
       var leaveDateInput by remember { mutableStateOf(selectedDateStr) }
       var reasonInput by remember { mutableStateOf("Personal emergency / Health rest") }
@@ -568,12 +491,31 @@ fun CalendarScreen(viewModel: PartnerViewModel) {
         }
       )
     }
+
+    if (showHelpDialog) {
+      AlertDialog(
+        onDismissRequest = { showHelpDialog = false },
+        title = {
+          Text(text = "Cleankr Partner Helpline", fontWeight = FontWeight.Bold)
+        },
+        text = {
+          Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("24/7 Dedicated Partner Support:")
+            Text("Toll-Free: 1800-CLEANKR-PARTNER", fontWeight = FontWeight.Bold, color = CleankrViolet)
+            Text("Email: partner-support@cleankr.in")
+            Text("For duty emergencies, partner support is active 24/7.")
+          }
+        },
+        confirmButton = {
+          TextButton(onClick = { showHelpDialog = false }) {
+            Text("Close")
+          }
+        }
+      )
+    }
   }
 }
 
-/**
- * Full Month Calendar Content for partners who wish to view the full monthly calendar grid.
- */
 @Composable
 private fun FullMonthCalendarContent(
   paddingValues: PaddingValues,
@@ -582,7 +524,7 @@ private fun FullMonthCalendarContent(
   leaves: List<com.example.data.model.CalendarLeaveEntry>,
   onSelectDate: (String) -> Unit
 ) {
-  var currentMonthIndex by remember { mutableIntStateOf(8) } // 8 = September
+  var currentMonthIndex by remember { mutableIntStateOf(8) }
   var currentYear by remember { mutableIntStateOf(2026) }
 
   val monthNames = listOf(
@@ -665,7 +607,7 @@ private fun FullMonthCalendarContent(
           Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
           Spacer(modifier = Modifier.height(8.dp))
 
-          val firstDayOffset = 1 // Sep 1, 2026 is Tuesday
+          val firstDayOffset = 1
           val daysInMonth = 30
           val totalCells = daysInMonth + firstDayOffset
           val rows = (totalCells + 6) / 7

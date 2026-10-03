@@ -16,3 +16,11 @@
 local.properties
 .env
 debug.keystore
+-e 
+*.zip
+*.apk
+*.aab
+.build-outputs/
+public/*.zip
+public/*.apk
+public/*.aab

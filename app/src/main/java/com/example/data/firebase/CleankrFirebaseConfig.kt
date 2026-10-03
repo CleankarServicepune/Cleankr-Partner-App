@@ -8,17 +8,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.storage.FirebaseStorage
 
-/**
- * Authoritative Firebase Configuration & Contract for Cleankr Partner App.
- *
- * Target Firebase Project ID: cleankr-724ce
- * Shared ecosystem: Cleankr Customer App, Cleankr Partner App, and Cleankr Admin Panel.
- */
 object CleankrFirebaseConfig {
 
   const val TARGET_PROJECT_ID = "cleankr-724ce"
 
-  // Canonical Shared Collections
   object Collections {
     const val USERS = "users"
     const val PARTNERS = "partners"
@@ -34,7 +27,6 @@ object CleankrFirebaseConfig {
     const val HUBS = "hubs"
   }
 
-  // Common Entity Fields
   object Fields {
     const val CUSTOMER_ID = "customerId"
     const val PARTNER_ID = "partnerId"
@@ -48,7 +40,6 @@ object CleankrFirebaseConfig {
     const val LAST_ACTIVE_AT = "lastActiveAt"
   }
 
-  // Canonical Partner Roles
   object Roles {
     const val PARTNER = "partner"
     const val CUSTOMER = "customer"
@@ -61,13 +52,9 @@ object CleankrFirebaseConfig {
     MISCONFIGURED_PROJECT_ID
   }
 
-  /**
-   * Evaluates current Firebase initialization status without throwing exceptions.
-   */
   fun checkStatus(context: Context): FirebaseConfigStatus {
     val apps = FirebaseApp.getApps(context)
     if (apps.isEmpty()) {
-      Log.w("CleankrFirebase", "No FirebaseApp initialized. 'google-services.json' for $TARGET_PROJECT_ID is pending in /app directory.")
       return FirebaseConfigStatus.MISSING_GOOGLE_SERVICES_JSON
     }
 
@@ -75,14 +62,8 @@ object CleankrFirebaseConfig {
     return if (currentProjectId == TARGET_PROJECT_ID) {
       FirebaseConfigStatus.CONNECTED_AND_VERIFIED
     } else {
-      Log.w("CleankrFirebase", "Firebase initialized with '$currentProjectId', expected '$TARGET_PROJECT_ID'")
       FirebaseConfigStatus.MISCONFIGURED_PROJECT_ID
     }
-  }
-
-  fun getDetectedProjectId(context: Context): String? {
-    val apps = FirebaseApp.getApps(context)
-    return if (apps.isNotEmpty()) FirebaseApp.getInstance().options.projectId else null
   }
 
   val isConfiguredForTargetProject: Boolean

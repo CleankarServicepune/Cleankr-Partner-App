@@ -1,13 +1,8 @@
 package com.example
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
-import androidx.compose.ui.unit.dp
-import com.example.ui.components.CleankrMonogram
-import com.example.ui.theme.CleankrPartnerTheme
+import com.example.ui.theme.MyApplicationTheme
 import com.github.takahirom.roborazzi.RobolectricDeviceQualifiers
 import com.github.takahirom.roborazzi.captureRoboImage
 import org.junit.Rule
@@ -26,13 +21,7 @@ class GreetingScreenshotTest {
 
   @Test
   fun greeting_screenshot() {
-    composeTestRule.setContent {
-      CleankrPartnerTheme(darkTheme = true) {
-        Box(modifier = Modifier.padding(24.dp)) {
-          CleankrMonogram(sizeDp = 96.dp)
-        }
-      }
-    }
+    composeTestRule.setContent { MyApplicationTheme { Greeting("Robolectric") } }
 
     composeTestRule.onRoot().captureRoboImage(filePath = "src/test/screenshots/greeting.png")
   }

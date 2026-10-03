@@ -1,334 +1,113 @@
 package com.example.ui.screens
 
-import android.graphics.Bitmap
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.DocumentScanner
-import androidx.compose.material.icons.filled.Policy
-import androidx.compose.material.icons.filled.VerifiedUser
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.model.KycStatus
+import com.example.ui.AppScreen
 import com.example.ui.PartnerViewModel
-import com.example.ui.theme.*
-import com.example.ui.theme.CleankrCoral
-import com.example.ui.theme.CleankrCyan
-import com.example.ui.theme.CleankrGreen
-import com.example.ui.theme.CleankrMagenta
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KycScreen(
-  viewModel: PartnerViewModel,
-  onBack: () -> Unit
-) {
-  val profile by viewModel.profile.collectAsState()
-
-  var aadhaarInput by remember { mutableStateOf("4812") }
-  var panInput by remember { mutableStateOf("8912F") }
-  var bankAccountInput by remember { mutableStateOf("4921") }
-  var ifscInput by remember { mutableStateOf("HDFC0001243") }
-  var upiInput by remember { mutableStateOf("sunil.clean@upi") }
-
-  var nsdcCertInput by remember { mutableStateOf(profile.nsdcDetails.certificateNumber) }
-  var nsdcDetails by remember { mutableStateOf(profile.nsdcDetails) }
-
-  var capturedDocBitmap by remember { mutableStateOf<Bitmap?>(null) }
-  val docCameraLauncher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.TakePicturePreview()
-  ) { bm: Bitmap? ->
-    capturedDocBitmap = bm
-  }
-
-  val scrollState = rememberScrollState()
-
+fun KycScreen(viewModel: PartnerViewModel) {
   Scaffold(
     topBar = {
       TopAppBar(
-        title = { Text("Partner KYC & Verification", fontWeight = FontWeight.Bold) },
+        title = {
+          Text(
+            text = "KYC & Skill India (NSDC)",
+            fontWeight = FontWeight.Black,
+            fontStyle = FontStyle.Italic
+          )
+        },
         navigationIcon = {
-          IconButton(onClick = onBack) {
-            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+          IconButton(onClick = { viewModel.navigateTo(AppScreen.HOME) }) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
           }
-        }
+        },
+        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
       )
     }
-  ) { innerPadding ->
-    Column(
+  ) { padding ->
+    LazyColumn(
       modifier = Modifier
         .fillMaxSize()
-        .padding(innerPadding)
-        .padding(horizontal = 16.dp)
-        .verticalScroll(scrollState),
-      verticalArrangement = Arrangement.spacedBy(16.dp)
+        .background(Color(0xFFFBFBFB))
+        .padding(padding)
+        .padding(16.dp),
+      verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-      // KYC Status Banner
-      Surface(
-        shape = RoundedCornerShape(14.dp),
-        color = CleankrGreen.copy(alpha = 0.12f),
-        modifier = Modifier
-          .fillMaxWidth()
-          .border(1.dp, CleankrGreen.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
-      ) {
-        Row(
-          modifier = Modifier.padding(16.dp),
-          verticalAlignment = Alignment.CenterVertically,
-          horizontalArrangement = Arrangement.spacedBy(12.dp)
+      item {
+        Card(
+          shape = RoundedCornerShape(16.dp),
+          colors = CardDefaults.cardColors(containerColor = Color.White),
+          border = BorderStroke(1.dp, Color(0xFFEEEEEE)),
+          modifier = Modifier.fillMaxWidth()
         ) {
-          Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = CleankrGreen, modifier = Modifier.size(32.dp))
-          Column {
-            Text("KYC Status: ${profile.kycStatus.name}", fontWeight = FontWeight.Bold, color = CleankrGreen, fontSize = 15.sp)
-            Text("Government identity verified & cleared for on-site services.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-          }
-        }
-      }
-
-      // Government ID Section
-      Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          Text("Government Identity Documents", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-
-          OutlinedTextField(
-            value = aadhaarInput,
-            onValueChange = { aadhaarInput = it },
-            label = { Text("Aadhaar Number (Last 4 Digits or Full)") },
-            prefix = { Text("XXXX-XXXX-") },
-            modifier = Modifier.fillMaxWidth()
-          )
-
-          OutlinedTextField(
-            value = panInput,
-            onValueChange = { panInput = it },
-            label = { Text("PAN Card Number") },
-            prefix = { Text("XXXXX") },
-            modifier = Modifier.fillMaxWidth()
-          )
-
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Column {
-              Text("Police Clearance Certificate", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-              Text("Status: ${profile.policeVerificationStatus}", fontSize = 11.sp, color = CleankrGreen)
-            }
-            Icon(Icons.Default.Policy, contentDescription = null, tint = CleankrCoral)
-          }
-
-          Spacer(modifier = Modifier.height(4.dp))
-
-          // Document Photo Proof
-          OutlinedButton(
-            onClick = { docCameraLauncher.launch(null) },
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (capturedDocBitmap == null) "Take Photo of Govt ID / Certificate" else "Retake Photo")
-          }
-
-          capturedDocBitmap?.let { bm ->
-            Image(
-              bitmap = bm.asImageBitmap(),
-              contentDescription = "Document",
-              modifier = Modifier
-                .fillMaxWidth()
-                .height(140.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(1.dp, CleankrCoral, RoundedCornerShape(8.dp))
+          Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Text(
+              text = "Government & Skill Credentials",
+              fontWeight = FontWeight.Black,
+              fontSize = 16.sp,
+              fontStyle = FontStyle.Italic
             )
+            KycBadgeRow(name = "Aadhaar e-KYC (UIDAI)", status = "Verified", isDone = true)
+            KycBadgeRow(name = "PAN Card Tax ID", status = "Verified", isDone = true)
+            KycBadgeRow(name = "NSDC Skill India Certificate", status = "Certified Level 4", isDone = true)
+            KycBadgeRow(name = "Police Clearance Certificate (PCC)", status = "Clear / Approved", isDone = true)
+            KycBadgeRow(name = "Bank Account Verification (Penny Drop)", status = "Verified", isDone = true)
           }
         }
       }
+    }
+  }
+}
 
-      // Bank & Payout Details (BankAccountDetails)
-      Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Text("Payout & Bank Details", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-            Surface(
-              shape = RoundedCornerShape(6.dp),
-              color = CleankrGreen.copy(alpha = 0.12f)
-            ) {
-              Text(
-                text = "Account Verified ✓",
-                color = CleankrGreen,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-              )
-            }
-          }
-          Text("Official bank account registered for direct withdrawal settlement and daily partner earnings.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-          OutlinedTextField(
-            value = bankAccountInput,
-            onValueChange = { bankAccountInput = it },
-            label = { Text("Bank Account Number") },
-            prefix = { Text("*******") },
-            modifier = Modifier.fillMaxWidth()
-          )
-
-          OutlinedTextField(
-            value = ifscInput,
-            onValueChange = { ifscInput = it },
-            label = { Text("Bank IFSC Code") },
-            modifier = Modifier.fillMaxWidth()
-          )
-
-          OutlinedTextField(
-            value = upiInput,
-            onValueChange = { upiInput = it },
-            label = { Text("UPI Virtual Payment Address (VPA)") },
-            modifier = Modifier.fillMaxWidth()
-          )
-        }
-      }
-
-      // NSDC Certificate Validation Card
-      Card(
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        modifier = Modifier.fillMaxWidth()
-      ) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-          Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-          ) {
-            Column {
-              Text("NSDC / Skill India Certification", fontWeight = FontWeight.Bold, fontSize = 14.sp)
-              Text("National Skill Development Corporation", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Icon(Icons.Default.VerifiedUser, contentDescription = null, tint = CleankrViolet)
-          }
-
-          Surface(
-            shape = RoundedCornerShape(8.dp),
-            color = when (nsdcDetails.verificationStatus) {
-              com.example.data.model.NsdcVerificationStatus.FORMAT_VALID_PENDING_GOVT_SYNC -> CleankrAmber.copy(alpha = 0.12f)
-              com.example.data.model.NsdcVerificationStatus.VERIFIED_OFFICIAL -> CleankrGreen.copy(alpha = 0.12f)
-              else -> MaterialTheme.colorScheme.surfaceVariant
-            },
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-              Text(
-                text = "Status: ${nsdcDetails.verificationStatus.name.replace("_", " ")}",
-                fontWeight = FontWeight.Bold,
-                fontSize = 11.sp,
-                color = when (nsdcDetails.verificationStatus) {
-                  com.example.data.model.NsdcVerificationStatus.FORMAT_VALID_PENDING_GOVT_SYNC -> Color(0xFF8A5B00)
-                  com.example.data.model.NsdcVerificationStatus.VERIFIED_OFFICIAL -> CleankrGreen
-                  else -> Color.Gray
-                }
-              )
-              Text(
-                text = nsdcDetails.officialVerificationRemarks ?: "Enter certificate number to validate against Skill India standards.",
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-              )
-            }
-          }
-
-          OutlinedTextField(
-            value = nsdcCertInput,
-            onValueChange = { nsdcCertInput = it },
-            label = { Text("NSDC Certificate Number") },
-            placeholder = { Text("e.g. NSDC-HKS-2024-9412") },
-            modifier = Modifier.fillMaxWidth()
-          )
-
-          Button(
-            onClick = {
-              val res = viewModel.validateNsdcCertificate(nsdcCertInput)
-              nsdcDetails = res
-            },
-            colors = ButtonDefaults.buttonColors(containerColor = CleankrViolet),
-            shape = RoundedCornerShape(8.dp),
-            modifier = Modifier.fillMaxWidth()
-          ) {
-            Text("Validate NSDC Certificate Format", fontSize = 12.sp, fontWeight = FontWeight.Bold)
-          }
-        }
-      }
-
-      // Save & Update Button
-      Button(
-        onClick = {
-          viewModel.submitKyc(aadhaarInput, panInput, bankAccountInput, ifscInput, upiInput)
-        },
-        colors = ButtonDefaults.buttonColors(containerColor = CleankrCoral),
-        shape = RoundedCornerShape(10.dp),
-        modifier = Modifier.fillMaxWidth().height(48.dp).testTag("save_kyc_button")
-      ) {
-        Text("Save & Verify Documents", fontWeight = FontWeight.Bold)
-      }
-
-      Spacer(modifier = Modifier.height(24.dp))
+@Composable
+fun KycBadgeRow(name: String, status: String, isDone: Boolean) {
+  Row(
+    modifier = Modifier.fillMaxWidth(),
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically
+  ) {
+    Text(text = name, fontSize = 13.sp, color = Color(0xFF333333))
+    Surface(
+      shape = RoundedCornerShape(6.dp),
+      color = if (isDone) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+    ) {
+      Text(
+        text = status,
+        color = if (isDone) Color(0xFF2E7D32) else Color(0xFFE65100),
+        fontSize = 11.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+      )
     }
   }
 }

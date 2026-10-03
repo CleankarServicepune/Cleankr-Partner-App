@@ -1,0 +1,18 @@
+package com.example.ui
+
+enum class AppScreen {
+  HOME,
+  NEW_JOBS,
+  ONGOING_JOBS,
+  TARGET,
+  MONEY,
+  PROFILE,
+  CALENDAR,
+  JOB_HISTORY,
+  MY_HUB,
+  KYC_SKILL_INDIA,
+  SECURITY_CENTER,
+  HELP_SUPPORT,
+  SETTINGS_NOTIFICATIONS,
+  PRIVACY_LEGAL
+}
