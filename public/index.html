@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cleankr Partner - Signed AAB & APK Download</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #10B981;
+      --primary-dark: #059669;
+      --blue: #2563EB;
+      --blue-dark: #1D4ED8;
+      --bg: #0F172A;
+      --card-bg: #1E293B;
+      --border: #334155;
+      --text-main: #F8FAFC;
+      --text-muted: #94A3B8;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+      text-align: center;
+    }
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34D399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      margin-bottom: 1.25rem;
+    }
+    .badge-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10B981;
+      box-shadow: 0 0 10px #10B981;
+    }
+    h1 {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #FFFFFF;
+      margin-bottom: 0.4rem;
+    }
+    p.subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 1.75rem;
+      line-height: 1.5;
+    }
+    .spec-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+      text-align: left;
+    }
+    .spec-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+    }
+    .spec-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.2rem;
+    }
+    .spec-value {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #F1F5F9;
+      word-break: break-all;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      margin-bottom: 1.5rem;
+    }
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .btn-aab {
+      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      color: #FFFFFF;
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+    }
+    .btn-aab:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+    }
+    .btn-apk {
+      background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+      color: #FFFFFF;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+    }
+    .btn-apk:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+    }
+    .btn-zip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: #CBD5E1;
+    }
+    .btn-zip:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #FFFFFF;
+    }
+    .footer-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="badge-status">Google Play Ready • Signed Release</div>
+    <h1>Cleankr Partner App</h1>
+    <p class="subtitle">Direct Download Portal for Play Console Release Bundle and Testing APK</p>
+
+    <div class="spec-grid">
+      <div class="spec-card">
+        <div class="spec-label">Package ID</div>
+        <div class="spec-value" style="font-size:0.8rem;">com.aistudio.cleankrpartner.kzqwm</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Target SDK</div>
+        <div class="spec-value">37 (Android 15+)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Version Code</div>
+        <div class="spec-value">2 (v1.0.1)</div>
+      </div>
+      <div class="spec-card">
+        <div class="spec-label">Release Signing</div>
+        <div class="spec-value" style="color:#34D399;">SHA-256 Validated</div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <a href="/cleankr-partner-release.aab" class="btn btn-aab" download>
+        <span>📦</span>
+        <span>Download Signed AAB (17 MB)</span>
+      </a>
+      <a href="/cleankr-partner-release.apk" class="btn btn-apk" download>
+        <span>📱</span>
+        <span>Download Release APK (18 MB)</span>
+      </a>
+      <a href="/cleankr-partner-app.zip" class="btn btn-zip" download>
+        <span>🗂️</span>
+        <span>Download Full Project ZIP (24 MB)</span>
+      </a>
+    </div>
+
+    <div class="footer-note">
+      Upload <strong>cleankr-partner-release.aab</strong> directly to Google Play Console Production or Internal Testing track. No extra signing needed.
+    </div>
+  </div>
+</body>
+</html>
