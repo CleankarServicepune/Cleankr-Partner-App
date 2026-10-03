@@ -1,3 +1,4 @@
+import java.util.Base64
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
 
 plugins {
@@ -46,23 +47,47 @@ android {
     } else {
       create("release") {
         val rootDebugKeystore = file("${rootDir}/debug.keystore")
+        val base64Keystore = file("${rootDir}/debug.keystore.base64")
+        if (!rootDebugKeystore.exists() && base64Keystore.exists()) {
+          try {
+            val bytes = Base64.getDecoder().decode(base64Keystore.readText().trim())
+            rootDebugKeystore.writeBytes(bytes)
+          } catch (_: Exception) {}
+        }
         if (rootDebugKeystore.exists()) {
           storeFile = rootDebugKeystore
           storePassword = "android"
           keyAlias = "androiddebugkey"
           keyPassword = "android"
         } else {
-          initWith(getByName("debug"))
+          val homeKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
+          if (homeKeystore.exists()) {
+            storeFile = homeKeystore
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+          } else {
+            initWith(getByName("debug"))
+          }
         }
       }
     }
     create("debugConfig") {
       val rootDebugKeystore = file("${rootDir}/debug.keystore")
+      val base64Keystore = file("${rootDir}/debug.keystore.base64")
+      if (!rootDebugKeystore.exists() && base64Keystore.exists()) {
+        try {
+          val bytes = Base64.getDecoder().decode(base64Keystore.readText().trim())
+          rootDebugKeystore.writeBytes(bytes)
+        } catch (_: Exception) {}
+      }
       if (rootDebugKeystore.exists()) {
         storeFile = rootDebugKeystore
         storePassword = "android"
         keyAlias = "androiddebugkey"
         keyPassword = "android"
+      } else {
+        initWith(getByName("debug"))
       }
     }
   }
