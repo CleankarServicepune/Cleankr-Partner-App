@@ -18,57 +18,50 @@ android {
     applicationId = "com.aistudio.cleankrpartner.kzqwm"
     minSdk = 24
     targetSdk = 37
-    versionCode = 2
-    versionName = "1.0.1"
+    versionCode = 3
+    versionName = "1.0.2"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   signingConfigs {
     val keystorePath = System.getenv("KEYSTORE_PATH")
-    val storePasswordEnv = System.getenv("STORE_PASSWORD")
-    val keyPasswordEnv = System.getenv("KEY_PASSWORD")
+    val storePasswordEnv = System.getenv("STORE_PASSWORD") ?: "android"
+    val keyPasswordEnv = System.getenv("KEY_PASSWORD") ?: "android"
     val keyAliasEnv = System.getenv("KEY_ALIAS") ?: "upload"
 
-    if (!keystorePath.isNullOrEmpty() && file(keystorePath).exists()) {
+    val uploadKeystoreFile = when {
+      !keystorePath.isNullOrEmpty() && file(keystorePath).exists() -> file(keystorePath)
+      file("${rootDir}/my-upload-key.jks").exists() -> file("${rootDir}/my-upload-key.jks")
+      file("${rootDir}/upload-keystore.jks").exists() -> file("${rootDir}/upload-keystore.jks")
+      file("${rootDir}/upload.jks").exists() -> file("${rootDir}/upload.jks")
+      file("${rootDir}/upload.keystore").exists() -> file("${rootDir}/upload.keystore")
+      else -> null
+    }
+
+    if (uploadKeystoreFile != null && uploadKeystoreFile.exists()) {
       create("release") {
-        storeFile = file(keystorePath)
-        storePassword = storePasswordEnv
-        keyAlias = keyAliasEnv
-        keyPassword = keyPasswordEnv
-      }
-    } else if (file("${rootDir}/my-upload-key.jks").exists()) {
-      create("release") {
-        storeFile = file("${rootDir}/my-upload-key.jks")
+        storeFile = uploadKeystoreFile
         storePassword = storePasswordEnv
         keyAlias = keyAliasEnv
         keyPassword = keyPasswordEnv
       }
     } else {
       create("release") {
-        val rootDebugKeystore = file("${rootDir}/debug.keystore")
-        val base64Keystore = file("${rootDir}/debug.keystore.base64")
-        if (!rootDebugKeystore.exists() && base64Keystore.exists()) {
-          try {
-            val bytes = Base64.getDecoder().decode(base64Keystore.readText().trim())
-            rootDebugKeystore.writeBytes(bytes)
-          } catch (_: Exception) {}
-        }
-        if (rootDebugKeystore.exists()) {
-          storeFile = rootDebugKeystore
-          storePassword = "android"
-          keyAlias = "androiddebugkey"
-          keyPassword = "android"
+        val fallbackBase64 = System.getenv("KEYSTORE_BASE64")
+        if (!fallbackBase64.isNullOrBlank()) {
+          val decodedFile = file("${rootDir}/my-upload-key.jks")
+          decodedFile.writeBytes(Base64.getDecoder().decode(fallbackBase64.trim()))
+          storeFile = decodedFile
+          storePassword = storePasswordEnv
+          keyAlias = keyAliasEnv
+          keyPassword = keyPasswordEnv
         } else {
-          val homeKeystore = file("${System.getProperty("user.home")}/.android/debug.keystore")
-          if (homeKeystore.exists()) {
-            storeFile = homeKeystore
-            storePassword = "android"
-            keyAlias = "androiddebugkey"
-            keyPassword = "android"
-          } else {
-            initWith(getByName("debug"))
-          }
+          // Strictly fail if release keystore is missing - NEVER fall back to debug.keystore
+          storeFile = file("${rootDir}/my-upload-key.jks")
+          storePassword = storePasswordEnv
+          keyAlias = keyAliasEnv
+          keyPassword = keyPasswordEnv
         }
       }
     }

@@ -22,22 +22,59 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Restore Keystore
+      - name: Prepare Release Signing Keystore
         run: |
-          mkdir -p ~/.android
-          echo "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" | base64 -d > debug.keystore
-          cp debug.keystore ~/.android/debug.keystore
+          if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+            echo "Restoring official upload keystore from GitHub Secret KEYSTORE_BASE64..."
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > my-upload-key.jks
+          elif [ -f "my-upload-key.jks" ]; then
+            echo "Using existing repository my-upload-key.jks"
+          elif [ -f "upload-keystore.jks" ]; then
+            cp upload-keystore.jks my-upload-key.jks
+          else
+            echo "::error::CRITICAL: No upload keystore found! Please configure KEYSTORE_BASE64 in GitHub Repository Secrets."
+            exit 1
+          fi
 
       - name: Grant Execute Permission to gradlew
-        run: chmod +x gradlew || true
+        run: chmod +x gradlew
 
-      - name: Build Debug & Release APK
-        run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace || ./gradlew assembleDebug --no-daemon --stacktrace
+      - name: Build Release APK
+        env:
+          KEYSTORE_PATH: my-upload-key.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'android' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'android' }}
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Build Release Bundle (AAB)
+        env:
+          KEYSTORE_PATH: my-upload-key.jks
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD || 'android' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'upload' }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'android' }}
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
+
+      - name: Mandatory Signing Certificate Verification
         run: |
-          ./gradlew bundleRelease --no-daemon --stacktrace || ./gradlew bundleDebug --no-daemon --stacktrace
+          echo "========================================================"
+          echo "Verifying Release AAB Signing Certificate Fingerprints..."
+          echo "========================================================"
+          AAB_FILE=$(find app/build/outputs/bundle/release/ -name "*.aab" | head -n 1)
+          if [ -z "$AAB_FILE" ]; then
+            echo "::error::Release AAB file was not generated!"
+            exit 1
+          fi
+          CERT_OUTPUT=$(keytool -printcert -jarfile "$AAB_FILE")
+          echo "$CERT_OUTPUT"
+          
+          EXPECTED_SHA1="2A:C2:B0:99:91:83:41:2B:73:B2:1C:4B:69:20:16:68:75:DD:E3:AB"
+          if echo "$CERT_OUTPUT" | grep -q "$EXPECTED_SHA1"; then
+            echo "SUCCESS: AAB signature perfectly matches Google Play registered SHA-1!"
+          else
+            echo "::warning::AAB signature does NOT match expected Google Play upload key: $EXPECTED_SHA1"
+            echo "If Play Console rejects this build, update KEYSTORE_BASE64 in GitHub Secrets with the keystore containing $EXPECTED_SHA1"
+          fi
 
       - name: Upload APKs Artifacts
         uses: actions/upload-artifact@v4
